@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<canvas id="myCanvas" width="850" height="230" style="border:1px solid #d3d3d3;">
+Your browser does not support the HTML5 canvas tag.</canvas>
+
+<br/>
+
+<button type="button" id="btn-generate" onclick="generate()">Generate!</button>
+<br/>
+<select name="formulas" id="formulas">
+	<option value="formula-ionian">Ionian</option>
+	<option value="formula-dorian">Dorian</option>
+	<option value="formula-phrygian">Phrygian</option>
+	<option value="formula-lydian">Lydian</option>
+	<option value="formula-mixolydian">Mixolydian</option>
+	<option value="formula-aeolian">Aeolian</option>
+	<option value="formula-locrian">Locrian</option>
+</select>
+<br/>
+
+<label for="txt-formula">Custom formula</label>
+<input type="text" name="txt-formula" id="txt-formula"/>
+<br/>
+
+<select name="select-notes" id="select-notes">
+	<option value="A">A</option>
+	<option value="Bb">A#/Bb</option>
+	<option value="B">B</option>
+	<option value="C">C</option>
+	<option value="Db">C#/Db</option>
+	<option value="D">D</option>
+	<option value="Eb">D#/Eb</option>
+	<option value="E">E</option>
+	<option value="F">F</option>
+	<option value="Gb">F#/Gb</option>
+	<option value="G">G</option>
+	<option value="Ab">G#/Ab</option>
+</select>
+<br/>
+
+<script>
+
+var preset_formulas = {
+	"formula-ionian" : ["1", "2", "3", "4", "5", "6", "7"],
+	"formula-dorian" : ["1", "2", "b3", "4", "5", "6", "b7"],
+	"formula-phrygian" : ["1", "b2", "b3", "4", "5", "b6", "b7"],
+	"formula-lydian" : ["1", "2", "3", "#4", "5", "6", "7"],
+	"formula-mixolydian" : ["1", "2", "3", "4", "5", "6", "b7"],
+	"formula-aeolian" : ["1", "2", "b3", "4", "5", "b6", "b7"],
+	"formula-locrian" : ["1", "b2", "b3", "4", "b5", "b6", "b7"]
+};
+
+var c = document.getElementById("myCanvas");
+var ctx = c.getContext("2d");
+ctx.font = "bold 14px Arial";
+
+var notes_natural 	= [ "C", "D", "E", "F", "G", "A", "B" ];
+var intervals_pures = [  0,   2,   4,   5,   7,   9,  11  ];
+
+var string_start_notes = [ "E", "B", "G", "D", "A", "E" ];
+
+var makeNote = function(baseval)
+{
+	var note = {
+		getValue: function()
+		{
+
+		},
+		getString: function()
+		{
+			
+		}
+	};
+	if(Number.isInteger(baseval))
+	{
+		note.value = baseval;
+	}
+	else
+	{
+
+	}
+}
+
+function calculate_note_value(note)
+{
+	var delta = 0;
+	var data = /^([A-G])([b|#]*)$/g.exec(note);
+	var note = data[1];
+	var mods = data[2];
+	var index = notes_natural.indexOf(note, 0);
+	var interval = intervals_pures[index];
+	
+	var delta = 0;
+	for(var i = 0; i < mods.length; i++)
+	{
+		var factor = mods[i] == "b" ? -1 : 1;
+		delta += factor;
+	}
+	interval += delta;
+	var min_interval = intervals_pures[0];
+	var max_interval = intervals_pures[intervals_pures.length - 1];
+	while(interval < min_interval) interval = max_interval + interval + 1;
+	while(interval > max_interval) interval = interval - max_interval - 1;
+	return interval;
+}
+
+function previous_natural_note(note)
+{
+	var note_index = notes_natural.indexOf(note[0], 0) - 1;
+	if(note_index < 0)
+	{
+		console.assert(note_index == -1);
+		note_index = 6;
+	}
+	return note_index;
+}
+
+function calculate_note_from_value(value, sharp, force_accidental)
+{
+	if(value > 11)
+	{
+		value = value % 12;
+	}
+	else if(value < 0)
+	{
+		while(value < 0)
+		{
+			value += 12;
+		} 
+	}
+	var next_note_to_value_index = 0;
+	var delta = 0;
+	for(var i = 0; i < notes_natural.length; i++)
+	{
+		var v = intervals_pures[i];
+		if(v >= value || i == notes_natural.length - 1)
+		{
+			delta = v - value;
+			next_note_to_value_index = i;
+			break;
+		}
+	}
+
+	if(delta == 0 && !force_accidental)
+	{
+		return notes_natural[next_note_to_value_index];
+	}
+	else if(delta == 0 && force_accidental)
+	{
+
+	}
+	else if(delta == 1)
+	{
+		// need to add accidental
+		if(sharp)
+		{
+			next_note_to_value_index--;
+			if(next_note_to_value_index < 0)
+			{
+				console.assert(next_note_to_value_index == -1);
+				next_note_to_value_index = 6;
+			}
+			return notes_natural[next_note_to_value_index] + "#";
+		}
+		else
+		{
+			// no ++ cause already is +1 from for loop
+			if(next_note_to_value_index > 6)
+			{
+				console.assert(next_note_to_value_index == 7);
+				next_note_to_value_index = 0;
+			}
+			return notes_natural[next_note_to_value_index] + "b"
+		}
+	}
+	else
+	{
+		console.assert(false);
+	}
+}
+
+function is_same_note(note1, note2)
+{
+	return calculate_note_value(note1) == calculate_note_value(note2);
+}
+
+function get_analogue_accidental(note)
+{
+	var note_value = calculate_note_value(note);
+	return calculate_note_from_value(note_value, is_flat_note(note));
+}
+
+function interval_to_semitones(interval)
+{
+	var found_mod = null;
+	var delta = 0;
+	
+	var data = /^([b|#]*)(\d+)$/g.exec(interval);
+	var mods = data[1];
+	var interval = data[2];
+
+	for(var i = 0; i < mods.length; i++)
+	{
+		var factor = mods[i] == "b" ? -1 : 1;
+		delta += factor;
+	}
+
+	return intervals_pures[Number(interval) - 1] + delta;
+}
+
+function fill_rect(x, y, w, h, color)
+{
+	ctx.fillStyle = color;
+	ctx.fillRect(x, y, w, h);
+}
+
+function create_fretboard(dx, dy, width, height, spacing_limits, thin_string_height, string_inc, frets)
+{
+	var first_string_start = spacing_limits;
+	var last_string_start = height - spacing_limits;
+	var space_to_place_strings = height - spacing_limits * 2;
+	var space_between_strings = space_to_place_strings / 5;
+
+	var fret_space = width / frets;
+	fill_rect(dx, dy, width, height, "#FEFFA2");
+
+	for(var i = 0; i < frets; i++)
+	{
+		fill_rect(dx + i * fret_space, dy, 3, height, "#7E7E7E");
+	}
+
+	for(var i = 0; i < 6; i++)
+	{
+		string_height = thin_string_height + string_inc * i;
+		startY = first_string_start + i * space_between_strings - string_height / 2;
+		fill_rect(dx, dy + startY, width, string_height, "#B6B6B6");
+	}
+
+
+	function draw_fret_circle(fretnum, doble)
+	{
+		var circle_color = "#C4AF86"
+		if(frets >= fretnum)
+		{
+			if(doble)
+			{
+				fill_circle(dx + fret_space * (fretnum - 1) + fret_space / 2, dy + 2 * height / 3, 10, circle_color);						
+				fill_circle(dx + fret_space * (fretnum - 1) + fret_space / 2, dy + height / 3, 10, circle_color);						
+			}
+			else
+			{
+				fill_circle(dx + fret_space * (fretnum - 1) + fret_space / 2, dy + height / 2, 10, circle_color);										
+			}
+		}
+	}
+
+	draw_fret_circle(3);
+	draw_fret_circle(5);
+	draw_fret_circle(7);
+	draw_fret_circle(9);
+	draw_fret_circle(12, true);
+	draw_fret_circle(15);
+	draw_fret_circle(17);
+	draw_fret_circle(19);
+	draw_fret_circle(21);
+	draw_fret_circle(24, true);
+
+	return {
+		get_note_position: function(string, fret) {
+			var x = fret_space * (fret - 1) + fret_space / 2;
+			var y = first_string_start + string * space_between_strings - string_height / 2;
+			return [x, y];
+		},
+		render_scale: function(fretboard_array) {
+			for(var i = 0; i < fretboard_array.length; i++)
+			{
+				for(var j = 0; j < fretboard_array[i].length; j++)
+				{
+					if(fretboard_array[i][j] != -1)
+					{
+						this.draw_note(i, j, fretboard_array[i][j]);
+					}
+				}
+			}
+		},
+		draw_note: function (string, fret, text) {
+			var position = fretboard.get_note_position(string, fret);
+			fill_circle(dx + position[0], dy + position[1], 12, "red");
+			ctx.fillStyle = "white";
+			ctx.textAlign = "center";
+			ctx.textBaseline = "middle";
+			ctx.fillText(text, dx + position[0], dy + position[1]);
+		}
+	};
+}
+
+function fill_circle(cx, cy, radius, color)
+{
+	ctx.beginPath();
+	ctx.arc(cx, cy, radius, 0, 2 * Math.PI, false);
+	ctx.fillStyle = color;
+	ctx.fill();
+}
+
+function check_valid_note(note)
+{
+	console.assert(note.length == 1 || note.length == 2);
+	console.assert(notes_natural.indexOf(note[0], 0) != -1);
+	if(note.length == 2)
+	{
+		console.assert(note[1] == "b" || note[1] == "#");
+	}
+}
+
+function is_flat_note(note)
+{
+	check_valid_note(note);
+	return note[1] == "b";
+}
+
+function is_sharp_note(note)
+{
+	check_valid_note(note);
+	return note[1] == "#";
+}
+
+function calculate_note_from(base_note, semitones, sharp)
+{
+	if(sharp === undefined)
+	{
+		sharp = true;
+	}
+	var value = calculate_note_value(base_note) + semitones;
+	return calculate_note_from_value(value, sharp);
+}
+
+function get_note_in_position(string, fret)
+{
+	var string_note = string_start_notes[string];
+	var note = calculate_note_from(string_note, fret);
+	return note;
+}
+
+function get_note_in_position_semitones(string, fret, base_note)
+{
+	var base_note_index = get_note_
+	var string_note = string_start_notes[string];
+	var note = calculate_note_from(string_note, fret);
+	return note;
+}
+
+function get_scale_from_formula(base_note, formula)
+{
+	var scale = [base_note];
+	for(var i = 1; i < formula.length; i++)
+	{
+		var interval_to_semitone = interval_to_semitones(formula[i]);
+		var scale_note = calculate_note_from(base_note, interval_to_semitone);
+		var should_switch = false;
+		for(var j = 0; j < scale.length; j++)
+		{
+			var present_note = scale[j];
+			if(present_note[0] == scale_note[0])
+			{
+				should_switch = true;
+				break;
+			}
+		}
+		if(should_switch) {
+			var accidental = get_analogue_accidental(scale_note);
+			scale_note = accidental;						
+		}
+		scale.push(scale_note);
+	}
+	return scale;
+}
+
+function create_empty_fretboard_array(strings, frets)
+{
+	var fretboard_array = [];
+	for(var i = 0; i < strings; i++)
+	{
+		var string_array = [];
+		for(var j = 0; j < frets; j++)
+		{
+			string_array.push(-1);
+		}
+		fretboard_array.push(string_array);
+	}
+	return fretboard_array;
+}
+
+function get_note_position(note)
+{
+	return calculate_note_value(note);
+}
+
+function generate_scale(frets, base_note, formula, representation)
+{
+	var fretboard = create_empty_fretboard_array(string_start_notes.length, frets);
+	var scale = get_scale_from_formula(base_note, formula);
+	for(var i = 0; i < string_start_notes.length; i++)
+	{
+		for(var j = 0; j < frets; j++)
+		{
+			var note_pos = get_note_in_position(i, j);
+			var analogue = get_analogue_accidental(note_pos);
+			var original_found = scale.indexOf(note_pos, 0) != -1;
+			var analogue_found = scale.indexOf(analogue, 0) != -1;
+			if(original_found)
+			{
+				fretboard[i][j] = note_pos;
+			}
+			else if(analogue_found)
+			{
+				fretboard[i][j] = analogue;
+			}
+		}
+	}
+	return fretboard;
+}
+
+function generate()
+{
+	ctx.clearRect(0, 0, c.width, c.height);
+	var fretboard = create_fretboard(40, 10, 800, 200, 15, 1, 1, 24);
+
+	var select_note = document.getElementById("select-notes");
+	var selected_note = select_note[select_note.selectedIndex].value;
+
+	var formulas = document.getElementById("formulas");
+	var selected = formulas[formulas.selectedIndex].value;
+
+	var selected_formula = preset_formulas[selected];
+
+	var custom_formula = document.getElementById("txt-formula").value.trim().split(/\s+/);
+
+	var scale = generate_scale(24, selected_note, selected_formula);
+
+	if(custom_formula.length > 1)
+	{
+		scale = generate_scale(24, selected_note, custom_formula);
+	}
+
+
+	fretboard.render_scale(scale);
+}
+
+var fretboard = create_fretboard(40, 10, 800, 200, 15, 1, 1, 24);
+
+var phrygian_formula = ["1", "b2", "b3", "4", "5", "b6", "b7"];
+get_scale_from_formula("E", phrygian_formula);
+
+var scale = generate_scale(24, "E", phrygian_formula);
+
+fretboard.render_scale(scale);
+
+</script> 
+
+</body>
+</html>
