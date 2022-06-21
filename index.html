@@ -10,13 +10,16 @@ Your browser does not support the HTML5 canvas tag.</canvas>
 <button type="button" id="btn-generate" onclick="generate()">Generate!</button>
 <br/>
 <select name="formulas" id="formulas">
-	<option value="formula-ionian">Ionian</option>
+	<option selected="selected" value="formula-ionian">Ionian</option>
 	<option value="formula-dorian">Dorian</option>
 	<option value="formula-phrygian">Phrygian</option>
 	<option value="formula-lydian">Lydian</option>
 	<option value="formula-mixolydian">Mixolydian</option>
 	<option value="formula-aeolian">Aeolian</option>
 	<option value="formula-locrian">Locrian</option>
+	<option value="formula-majortriads" data-formula="1 3 5">Major triads</option>
+	<option value="formula-mintriads" data-formula="1 b3 5">Minor triads</option>
+	<option value="formula-dimtriads" data-formula="1 b3 b5">Diminished triads</option>
 </select>
 <br/>
 
@@ -28,7 +31,7 @@ Your browser does not support the HTML5 canvas tag.</canvas>
 	<option value="A">A</option>
 	<option value="Bb">A#/Bb</option>
 	<option value="B">B</option>
-	<option value="C">C</option>
+	<option selected="selected" value="C">C</option>
 	<option value="Db">C#/Db</option>
 	<option value="D">D</option>
 	<option value="Eb">D#/Eb</option>
@@ -41,6 +44,7 @@ Your browser does not support the HTML5 canvas tag.</canvas>
 <br/>
 
 <script>
+
 
 var preset_formulas = {
 	"formula-ionian" : ["1", "2", "3", "4", "5", "6", "7"],
@@ -61,27 +65,15 @@ var intervals_pures = [  0,   2,   4,   5,   7,   9,  11  ];
 
 var string_start_notes = [ "E", "B", "G", "D", "A", "E" ];
 
-var makeNote = function(baseval)
-{
-	var note = {
-		getValue: function()
-		{
-
-		},
-		getString: function()
-		{
-			
-		}
-	};
-	if(Number.isInteger(baseval))
-	{
-		note.value = baseval;
-	}
-	else
-	{
-
-	}
-}
+var intervals_colors = {
+	"1": "red",
+	"3": "blue",
+	"b3": "blue",
+	"5": "green",
+	"b5": "green",
+	"7": "#FF00FF",
+	"b7": "#FF00FF"
+};
 
 function calculate_note_value(note)
 {
@@ -273,21 +265,35 @@ function create_fretboard(dx, dy, width, height, spacing_limits, thin_string_hei
 			var y = first_string_start + string * space_between_strings - string_height / 2;
 			return [x, y];
 		},
-		render_scale: function(fretboard_array) {
+		render_scale: function(fretboard_array, render_method) {
 			for(var i = 0; i < fretboard_array.length; i++)
 			{
 				for(var j = 0; j < fretboard_array[i].length; j++)
 				{
-					if(fretboard_array[i][j] != -1)
+					var item = fretboard_array[i][j];
+					var note = item["note"];
+					var interval = item["interval"];
+					if(note !== undefined)
 					{
-						this.draw_note(i, j, fretboard_array[i][j]);
+						if(render_method == "interval")
+						{
+							this.draw_note(i, j, interval, intervals_colors[interval]);
+						}
+						else
+						{
+							this.draw_note(i, j, note, intervals_colors[interval]);
+						}
 					}
 				}
 			}
 		},
-		draw_note: function (string, fret, text) {
-			var position = fretboard.get_note_position(string, fret);
-			fill_circle(dx + position[0], dy + position[1], 12, "red");
+		draw_note: function (string, fret, text, color) {
+			var position = this.get_note_position(string, fret);
+			if(color === undefined)
+			{
+				color = "black";
+			}
+			fill_circle(dx + position[0], dy + position[1], 12, color);
 			ctx.fillStyle = "white";
 			ctx.textAlign = "center";
 			ctx.textBaseline = "middle";
@@ -353,7 +359,11 @@ function get_note_in_position_semitones(string, fret, base_note)
 
 function get_scale_from_formula(base_note, formula)
 {
-	var scale = [base_note];
+	var scale = [{
+		"note": base_note,
+		"interval": formula[0]
+	}];
+
 	for(var i = 1; i < formula.length; i++)
 	{
 		var interval_to_semitone = interval_to_semitones(formula[i]);
@@ -372,7 +382,10 @@ function get_scale_from_formula(base_note, formula)
 			var accidental = get_analogue_accidental(scale_note);
 			scale_note = accidental;						
 		}
-		scale.push(scale_note);
+		scale.push({
+			"note": scale_note,
+			"interval": formula[i]
+		});
 	}
 	return scale;
 }
@@ -405,18 +418,20 @@ function generate_scale(frets, base_note, formula, representation)
 	{
 		for(var j = 0; j < frets; j++)
 		{
+			var note_content = {};
 			var note_pos = get_note_in_position(i, j);
 			var analogue = get_analogue_accidental(note_pos);
-			var original_found = scale.indexOf(note_pos, 0) != -1;
-			var analogue_found = scale.indexOf(analogue, 0) != -1;
-			if(original_found)
+			var original_filter_list = scale.filter(item => item.note == note_pos);
+			var analogue_filter_list = scale.filter(item => item.note == analogue);
+			if(original_filter_list.length > 0)
 			{
-				fretboard[i][j] = note_pos;
+				note_content = original_filter_list[0];
 			}
-			else if(analogue_found)
+			else if(analogue_filter_list.length > 0)
 			{
-				fretboard[i][j] = analogue;
+				note_content = analogue_filter_list[0];
 			}
+			fretboard[i][j] = note_content;
 		}
 	}
 	return fretboard;
@@ -431,32 +446,37 @@ function generate()
 	var selected_note = select_note[select_note.selectedIndex].value;
 
 	var formulas = document.getElementById("formulas");
-	var selected = formulas[formulas.selectedIndex].value;
+	
+	var selected_item = formulas[formulas.selectedIndex];
+	var selected = selected_item.value;
 
-	var selected_formula = preset_formulas[selected];
+	var data_formula = selected_item.dataset.formula;
+	var scale;
 
+	if(data_formula)
+	{
+		data_formula = data_formula.trim().split(/\s+/);
+	}
+	else
+	{
+		var selected_formula = preset_formulas[selected];
+		scale = generate_scale(25, selected_note, selected_formula);	
+	}
+	
 	var custom_formula = document.getElementById("txt-formula").value.trim().split(/\s+/);
-
-	var scale = generate_scale(24, selected_note, selected_formula);
-
 	if(custom_formula.length > 1)
 	{
-		scale = generate_scale(24, selected_note, custom_formula);
+		scale = generate_scale(25, selected_note, custom_formula);
+	}
+	else if(data_formula && data_formula.length > 1)
+	{
+		scale = generate_scale(25, selected_note, data_formula);
 	}
 
-
-	fretboard.render_scale(scale);
+	fretboard.render_scale(scale, "interval");
 }
 
-var fretboard = create_fretboard(40, 10, 800, 200, 15, 1, 1, 24);
-
-var phrygian_formula = ["1", "b2", "b3", "4", "5", "b6", "b7"];
-get_scale_from_formula("E", phrygian_formula);
-
-var scale = generate_scale(24, "E", phrygian_formula);
-
-fretboard.render_scale(scale);
-
+generate();
 </script> 
 
 </body>
