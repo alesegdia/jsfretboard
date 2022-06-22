@@ -37,24 +37,34 @@ label { font-family: sans-serif; }
 <br/>
 <select name="formulas" id="formulas">
 	<option selected="selected" value="formula-ionian"
+		data-verbose = "" 
 		data-formula="1 2 3 4 5 6 7">Ionian</option>
 	<option value="formula-dorian"
+		data-verbose = ""
 		data-formula="1 2 b3 4 5 6 b7">Dorian</option>
 	<option value="formula-phrygian"
+		data-verbose = ""
 		data-formula="1 b2 b3 4 5 b6 b7">Phrygian</option>
 	<option value="formula-lydian"
+		data-verbose = ""
 		data-formula="1 2 3 #4 5 6 7">Lydian</option>
 	<option value="formula-mixolydian"
+		data-verbose = ""
 		data-formula="1 2 3 4 5 6 b7">Mixolydian</option>
 	<option value="formula-aeolian"
+		data-verbose = ""
 		data-formula="1 2 b3 4 5 b6 b7">Aeolian</option>
 	<option value="formula-locrian"
+		data-verbose = ""
 		data-formula="1 b2 b3 4 b5 b6 b7">Locrian</option>
 	<option value="formula-majortriads"
+		data-verbose = ""
 		data-formula="1 3 5">Major triads</option>
 	<option value="formula-mintriads"
+		data-verbose = ""
 		data-formula="1 b3 5">Minor triads</option>
 	<option value="formula-dimtriads"
+		data-verbose = ""
 		data-formula="1 b3 b5">Diminished triads</option>
 </select>
 <br/>
@@ -88,7 +98,7 @@ label { font-family: sans-serif; }
 </div>
 
 <div id="canvas-container" style="float: left">
-<canvas id="fretcanvas0" width="850" height="230"></canvas>
+<canvas id="fretcanvas0" width="850" height="270"></canvas>
 
 </div>
 
@@ -511,7 +521,7 @@ function generate()
 	ctx.font = "bold 14px Arial";
 
 	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-	var fretboard = create_fretboard(40, 10, 800, 200, 15, 1, 1, 24);
+	var fretboard = create_fretboard(40, 50, 800, 200, 15, 1, 1, 24);
 
 	var select_note = document.getElementById("select-notes");
 	var selected_note = select_note[select_note.selectedIndex].value;
@@ -526,16 +536,27 @@ function generate()
 
 	var data_formula = selected_item.dataset.formula.trim().split(/\s+/);
 
-	var custom_formula = document.getElementById("txt-formula").value.trim().split(/\s+/);
+ 	var custom_formula_txt = document.getElementById("txt-formula").value.trim();
+	var custom_formula = custom_formula_txt.split(/\s+/);
+	var name;
 	if(custom_formula.length > 1)
 	{
+		name = selected_note + " with custom formula " + custom_formula_txt;
 		scale = generate_scale(25, selected_note, custom_formula);
 	}
 	else
 	{
+		name = selected_note + " " + selected_item.text;
 		scale = generate_scale(25, selected_note, data_formula);
 	}
 
+	var prev_style = ctx.font;
+	ctx.font = "bold 32px Arial";
+	ctx.fillStyle = "black";
+	ctx.textAlign = "left";
+	ctx.textBaseline = "middle";
+	ctx.fillText(name, 30, 30);
+	ctx.font = prev_style;
 	fretboard.render_scale(scale, selected_render);
 
 	loadOrSaveCurrent(true);
@@ -633,7 +654,7 @@ function addCanvas()
 {
 	lastCanvas++;
 	var newCanvas = document.createElement("div");
-	newCanvas.innerHTML = "<div><canvas id=\"fretcanvas" + lastCanvas + "\" width=\"850\" height=\"230\"></canvas></div>";
+	newCanvas.innerHTML = "<div><canvas id=\"fretcanvas" + lastCanvas + "\" width=\"850\" height=\"270\"></canvas></div>";
 	document.getElementById("canvas-container").appendChild(newCanvas.firstChild);
 	refreshFretboardSelects();
 	
