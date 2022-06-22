@@ -1,13 +1,39 @@
 <!DOCTYPE html>
 <html>
+<head>
+<style>
+a, h1 { font-family: sans-serif; }
+label { font-family: sans-serif; }
+</style>
+</head>
 <body>
 
-<canvas id="myCanvas" width="850" height="230" style="border:1px solid #d3d3d3;">
-Your browser does not support the HTML5 canvas tag.</canvas>
 
+	<h1>JSFretboards</h1>
+
+<div>
+
+<div id="formulario" style="float: left">
+
+<label for="select-notes">Base note</label><br/>
+<select name="select-notes" id="select-notes">
+	<option value="A">A</option>
+	<option value="Bb">A#/Bb</option>
+	<option value="B">B</option>
+	<option selected="selected" value="C">C</option>
+	<option value="Db">C#/Db</option>
+	<option value="D">D</option>
+	<option value="Eb">D#/Eb</option>
+	<option value="E">E</option>
+	<option value="F">F</option>
+	<option value="Gb">F#/Gb</option>
+	<option value="G">G</option>
+	<option value="Ab">G#/Ab</option>
+</select>
+<br/>
 <br/>
 
-<button type="button" id="btn-generate" onclick="generate()">Generate!</button>
+<label for="formulas">Scales</label>
 <br/>
 <select name="formulas" id="formulas">
 	<option selected="selected" value="formula-ionian"
@@ -32,32 +58,55 @@ Your browser does not support the HTML5 canvas tag.</canvas>
 		data-formula="1 b3 b5">Diminished triads</option>
 </select>
 <br/>
+<br/>
 
 <label for="txt-formula">Custom formula</label>
-<input type="text" name="txt-formula" id="txt-formula"/>
+<br/>
+<input type="text" name="txt-formula" placeholder="1 2 b3 4 5 b6 b7" id="txt-formula"/>
+<br/>
 <br/>
 
-<select name="select-notes" id="select-notes">
-	<option value="A">A</option>
-	<option value="Bb">A#/Bb</option>
-	<option value="B">B</option>
-	<option selected="selected" value="C">C</option>
-	<option value="Db">C#/Db</option>
-	<option value="D">D</option>
-	<option value="Eb">D#/Eb</option>
-	<option value="E">E</option>
-	<option value="F">F</option>
-	<option value="Gb">F#/Gb</option>
-	<option value="G">G</option>
-	<option value="Ab">G#/Ab</option>
+<label for="select-rendertype">Render type</label>
+<br/>
+<select name="select-rendertype" id="select-rendertype">
+	<option value="note">Note name</option>
+	<option value="interval">Interval value</option>
+	<option value="interval_name">Interval name</option>
 </select>
 <br/>
+<br/>
+
+<label for="select-fretboard">Fretboards</label>
+<br/>
+<select name="fretboards" id="fretboards" onChange="changedFretboards(this)">
+</select>
+<button type="button" id="btn-addcanvas" onclick="addCanvas()">+</button>
+<button type="button" id="btn-rmcanvas" onclick="rmCanvas()">-</button>
+<br/>
+<br/>
+
+</div>
+
+<div id="canvas-container" style="float: left">
+<canvas id="fretcanvas0" width="850" height="230"></canvas>
+
+</div>
+
+</div>
 
 <script>
 
-var c = document.getElementById("myCanvas");
-var ctx = c.getContext("2d");
-ctx.font = "bold 14px Arial";
+var lastCanvas = 0;
+var currentCanvas = 0;
+var all_fretboards = {};
+
+function CurrentCtx(canvas_index)
+{
+	console.assert(currentCanvas >= 0 && currentCanvas <= lastCanvas);
+	var c = document.getElementById("fretcanvas" + currentCanvas);
+	var ctx = c.getContext("2d");
+	return ctx;
+}
 
 var notes_natural 	= [ "C", "D", "E", "F", "G", "A", "B" ];
 var intervals_pures = [  0,   2,   4,   5,   7,   9,  11  ];
@@ -140,7 +189,7 @@ function calculate_note_from_value(value, sharp, force_accidental)
 	}
 	else if(delta == 0 && force_accidental)
 	{
-
+		console.assert(false); // not implemented!
 	}
 	else if(delta == 1)
 	{
@@ -203,6 +252,7 @@ function interval_to_semitones(interval)
 
 function fill_rect(x, y, w, h, color)
 {
+	var ctx = CurrentCtx();
 	ctx.fillStyle = color;
 	ctx.fillRect(x, y, w, h);
 }
@@ -274,19 +324,13 @@ function create_fretboard(dx, dy, width, height, spacing_limits, thin_string_hei
 					var interval = item["interval"];
 					if(note !== undefined)
 					{
-						if(render_method == "interval")
-						{
-							this.draw_note(i, j, interval, intervals_colors[interval]);
-						}
-						else
-						{
-							this.draw_note(i, j, note, intervals_colors[interval]);
-						}
+						this.draw_note(i, j, item[render_method], intervals_colors[interval]);
 					}
 				}
 			}
 		},
 		draw_note: function (string, fret, text, color) {
+			var ctx = CurrentCtx();
 			var position = this.get_note_position(string, fret);
 			if(color === undefined)
 			{
@@ -303,6 +347,7 @@ function create_fretboard(dx, dy, width, height, spacing_limits, thin_string_hei
 
 function fill_circle(cx, cy, radius, color)
 {
+	var ctx = CurrentCtx();
 	ctx.beginPath();
 	ctx.arc(cx, cy, radius, 0, 2 * Math.PI, false);
 	ctx.fillStyle = color;
@@ -356,11 +401,29 @@ function get_note_in_position_semitones(string, fret, base_note)
 	return note;
 }
 
+var interval_names = {
+	"0": "P1",
+	"1": "P1",
+	"2": "M2",
+	"b2": "m2",
+	"b3": "m3",
+	"3": "M3",
+	"4": "P4",
+	"5": "P5",
+	"b5": "°5",
+	"#4": "+4",
+	"b6": "m6",
+	"6": "M6",
+	"b7": "m7",
+	"7": "M7"
+};
+
 function get_scale_from_formula(base_note, formula)
 {
 	var scale = [{
 		"note": base_note,
-		"interval": formula[0]
+		"interval": formula[0],
+		"interval_name": interval_names["1"]
 	}];
 
 	for(var i = 1; i < formula.length; i++)
@@ -383,10 +446,16 @@ function get_scale_from_formula(base_note, formula)
 		}
 		scale.push({
 			"note": scale_note,
-			"interval": formula[i]
+			"interval": formula[i],
+			"interval_name": interval_names[formula[i]]
 		});
 	}
 	return scale;
+}
+
+function get_interval_name_from_interval(interval)
+{
+	var interval = interval_to_semitones(interval)
 }
 
 function create_empty_fretboard_array(strings, frets)
@@ -438,11 +507,17 @@ function generate_scale(frets, base_note, formula, representation)
 
 function generate()
 {
-	ctx.clearRect(0, 0, c.width, c.height);
+	var ctx = CurrentCtx();
+	ctx.font = "bold 14px Arial";
+
+	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 	var fretboard = create_fretboard(40, 10, 800, 200, 15, 1, 1, 24);
 
 	var select_note = document.getElementById("select-notes");
 	var selected_note = select_note[select_note.selectedIndex].value;
+
+	var select_render = document.getElementById("select-rendertype");
+	var selected_render = select_render[select_render.selectedIndex].value;
 
 	var formulas = document.getElementById("formulas");
 	
@@ -461,10 +536,125 @@ function generate()
 		scale = generate_scale(25, selected_note, data_formula);
 	}
 
-	fretboard.render_scale(scale, "interval");
+	fretboard.render_scale(scale, selected_render);
+
+	loadOrSaveCurrent(true);
 }
 
+function forAllInputs (fn)
+{
+	var ids = ["select-notes", "formulas", "txt-formula", "select-rendertype"];
+	for(var i = 0; i < ids.length; i++)
+	{
+		var current_id = ids[i];
+		var item = document.getElementById(current_id);
+		fn(item);
+	}
+}
+
+function configChanges()
+{
+	forAllInputs(function(item)
+	{
+		item.addEventListener("change", function() {
+			generate();
+		});
+		item.addEventListener("keyup", function() {
+			generate();
+		});
+	});
+}
+
+function loadOrSaveCurrent (save)
+{
+	var object = null;
+	if(save)
+	{
+		object = {};
+	}
+	else
+	{
+		object = all_fretboards[currentCanvas];
+	}
+	if(object == undefined) return;
+	var ids = ["select-notes", "formulas", "txt-formula", "select-rendertype"];
+	for(var i = 0; i < ids.length; i++)
+	{
+		var current_id = ids[i];
+		var item = document.getElementById(current_id);
+		if(item.tagName == "SELECT")
+		{
+			if(save)
+			{
+				object[current_id] = item.selectedIndex;				
+			}
+			else
+			{
+				item.selectedIndex = object[current_id];
+			}
+		}
+		else if(item.tagName = "INPUT" && item.type == "text")
+		{
+			if(save)
+			{
+				object[current_id] = item.value;
+			}
+			else
+			{
+				item.value = object[current_id];
+			}
+		}
+		else
+		{
+			console.assert(false);
+		}
+	}
+	if(save)
+	{
+		all_fretboards[currentCanvas] = object;
+	}
+}
+
+function refreshFretboardSelects()
+{
+	var fretboard_selects = document.getElementById("fretboards");
+	fretboard_selects.innerHTML = "";
+	for(var i = 0; i <= lastCanvas; i++)
+	{
+		onChange="activeFretboardChanged(this)"
+		var option = document.createElement("option");
+		option.text = "Fretboard #" + i;
+		option.value = i;
+		fretboard_selects.add(option);
+	}
+}
+
+function addCanvas()
+{
+	lastCanvas++;
+	var newCanvas = document.createElement("div");
+	newCanvas.innerHTML = "<div><canvas id=\"fretcanvas" + lastCanvas + "\" width=\"850\" height=\"230\"></canvas></div>";
+	document.getElementById("canvas-container").appendChild(newCanvas.firstChild);
+	refreshFretboardSelects();
+	
+	var prevCanvas = currentCanvas;
+	currentCanvas = lastCanvas;
+	generate();
+	currentCanvas = prevCanvas;
+}
+
+function changedFretboards(elem)
+{
+	currentCanvas = elem.value;
+	loadOrSaveCurrent(false);
+	var value = elem.value;
+}
+
+refreshFretboardSelects();
+
+configChanges();
 generate();
+
 </script> 
 
 </body>
