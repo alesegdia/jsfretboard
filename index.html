@@ -444,7 +444,7 @@ function get_scale_from_formula(base_note, formula)
 		for(var j = 0; j < scale.length; j++)
 		{
 			var present_note = scale[j];
-			if(present_note[0] == scale_note[0])
+			if(present_note["note"][0] == scale_note[0])
 			{
 				should_switch = true;
 				break;
