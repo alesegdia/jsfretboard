@@ -63,7 +63,6 @@ label { font-family: sans-serif; }
 
 <div id="canvas-container" style="float: left">
 <canvas id="fretcanvas0" width="850" height="270"></canvas>
-
 </div>
 
 </div>
@@ -74,9 +73,11 @@ function loadData()
 {
 	var loadData = document.getElementById("data-load");
 	all_fretboards = JSON.parse(loadData.value);
-	for(var i = 0; i < all_fretboards.length; i++)
+
+	for (const [key, value] of Object.entries(all_fretboards))
 	{
-		currentCanvas = i;
+		currentCanvas = key;
+		addCanvas();
 		loadOrSaveCurrent();
 	}
 }
@@ -619,8 +620,12 @@ function generate_scale(frets, base_note, formula, representation)
 
 function generate()
 {
-	var start_fret = document.getElementById("txt-starting-fret").value;
-	var num_frets = document.getElementById("txt-num-frets").value;
+	var start_fret = Number(document.getElementById("txt-starting-fret").value);
+	if(start_fret > 0)
+	{
+		start_fret = start_fret - 1;
+	}
+	var num_frets = Number(document.getElementById("txt-num-frets").value);
 
 	var select_note = document.getElementById("select-notes");
 	var selected_note = select_note[select_note.selectedIndex].value;
@@ -649,12 +654,12 @@ function generate()
 	if(custom_formula.length > 1)
 	{
 		name = selected_note + " with custom formula " + custom_formula_txt;
-		scale = generate_scale(num_frets+1, selected_note, custom_formula);
+		scale = generate_scale(start_fret + num_frets + 1, selected_note, custom_formula);
 	}
 	else
 	{
 		name = selected_note + " " + selected_item.text;
-		scale = generate_scale(num_frets+1, selected_note, data_formula);
+		scale = generate_scale(start_fret + num_frets + 1, selected_note, data_formula);
 	}
 
 	var prev_style = ctx.font;
