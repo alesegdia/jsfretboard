@@ -15,60 +15,8 @@ label { font-family: sans-serif; }
 
 <div id="formulario" style="float: left">
 
-<label for="select-notes">Base note</label><br/>
-<select name="select-notes" id="select-notes">
-	<option value="A">A</option>
-	<option value="Bb">A#/Bb</option>
-	<option value="B">B</option>
-	<option selected="selected" value="C">C</option>
-	<option value="Db">C#/Db</option>
-	<option value="D">D</option>
-	<option value="Eb">D#/Eb</option>
-	<option value="E">E</option>
-	<option value="F">F</option>
-	<option value="Gb">F#/Gb</option>
-	<option value="G">G</option>
-	<option value="Ab">G#/Ab</option>
-</select>
-<br/>
-<br/>
-
-<label for="formulas">Scales</label>
-<br/>
-<select name="formulas" id="formulas">
-	<option selected="selected" value="formula-ionian"
-		data-verbose = "" 
-		data-formula="1 2 3 4 5 6 7">Ionian</option>
-	<option value="formula-dorian"
-		data-verbose = ""
-		data-formula="1 2 b3 4 5 6 b7">Dorian</option>
-	<option value="formula-phrygian"
-		data-verbose = ""
-		data-formula="1 b2 b3 4 5 b6 b7">Phrygian</option>
-	<option value="formula-lydian"
-		data-verbose = ""
-		data-formula="1 2 3 #4 5 6 7">Lydian</option>
-	<option value="formula-mixolydian"
-		data-verbose = ""
-		data-formula="1 2 3 4 5 6 b7">Mixolydian</option>
-	<option value="formula-aeolian"
-		data-verbose = ""
-		data-formula="1 2 b3 4 5 b6 b7">Aeolian</option>
-	<option value="formula-locrian"
-		data-verbose = ""
-		data-formula="1 b2 b3 4 b5 b6 b7">Locrian</option>
-	<option value="formula-majortriads"
-		data-verbose = ""
-		data-formula="1 3 5">Major triads</option>
-	<option value="formula-mintriads"
-		data-verbose = ""
-		data-formula="1 b3 5">Minor triads</option>
-	<option value="formula-dimtriads"
-		data-verbose = ""
-		data-formula="1 b3 b5">Diminished triads</option>
-</select>
-<br/>
-<br/>
+<div id="scales-container">
+</div>
 
 <label for="txt-formula">Custom formula</label>
 <br/>
@@ -85,6 +33,13 @@ label { font-family: sans-serif; }
 </select>
 <br/>
 <br/>
+<label>Fret start</label>
+<input type="text" id="txt-starting-fret" value="0" />
+<br/>
+<label>Fret num</label>
+<input type="text" id="txt-num-frets" value="24" />
+<br/>
+<br/>
 
 <label for="select-fretboard">Fretboards</label>
 <br/>
@@ -92,6 +47,15 @@ label { font-family: sans-serif; }
 </select>
 <button type="button" id="btn-addcanvas" onclick="addCanvas()">+</button>
 <button type="button" id="btn-rmcanvas" onclick="rmCanvas()">-</button>
+<br/>
+<br/>
+
+<button type="button" id="btn-addcanvas" onclick="loadData()">Load</button>
+<input type="text" id="data-load"/>
+<br/>
+<label>Save</label>
+<input type="text" id="data-save"/>
+
 <br/>
 <br/>
 
@@ -106,11 +70,110 @@ label { font-family: sans-serif; }
 
 <script>
 
+function loadData()
+{
+	var loadData = document.getElementById("data-load");
+	all_fretboards = JSON.parse(loadData.value);
+	for(var i = 0; i < all_fretboards.length; i++)
+	{
+		currentCanvas = i;
+		loadOrSaveCurrent();
+	}
+}
+
+function createNotesSelectHTML(id)
+{
+	return `
+	<label for="select-notes">Base note</label><br/>
+	<select data-targetfretboard="${id}" name="select-notes" id="select-notes">
+	<option value="A">A</option>
+	<option value="Bb">A#/Bb</option>
+	<option value="B">B</option>
+	<option selected="selected" value="C">C</option>
+	<option value="Db">C#/Db</option>
+	<option value="D">D</option>
+	<option value="Eb">D#/Eb</option>
+	<option value="E">E</option>
+	<option value="F">F</option>
+	<option value="Gb">F#/Gb</option>
+	<option value="G">G</option>
+	<option value="Ab">G#/Ab</option>
+	</select>
+	<br/>
+	<br/>
+	`;
+}
+
+var default_formulas = [
+	["1 2 3 4 5 6 7", "Ionian"],
+	["1 2 b3 4 5 6 b7", "Dorian"],
+	["1 b2 b3 4 5 b6 b7", "Phrygian"],
+	["1 2 3 #4 5 6 7", "Lydian"],
+	["1 2 3 4 5 6 b7", "Mixolydian"],
+	["1 2 b3 4 5 b6 b7", "Aeolian"],
+	["1 b2 b3 4 b5 b6 b7", "Locrian"],
+	["1 3 5", "Major triads"],
+	["1 b3 5", "Minor triads"],
+	["1 b3 b5", "Diminished triads"],
+];
+
+function slugify(str)
+{
+    str = str.replace(/^\s+|\s+$/g, ''); // trim
+    str = str.toLowerCase();
+  
+    // remove accents, swap ñ for n, etc
+    var from = "àáäâèéëêìíïîòóöôùúüûñç·/_,:;";
+    var to   = "aaaaeeeeiiiioooouuuunc------";
+    for (var i=0, l=from.length ; i<l ; i++) {
+        str = str.replace(new RegExp(from.charAt(i), 'g'), to.charAt(i));
+    }
+
+    str = str.replace(/[^a-z0-9 -]/g, '') // remove invalid chars
+        .replace(/\s+/g, '-') // collapse whitespace and replace by -
+        .replace(/-+/g, '-'); // collapse dashes
+
+    return str;
+}
+
+function generateFormulasHTML(target_fretboard)
+{
+	var markup = `
+		<label for="formulas">Scales</label>
+		<br/>
+		<select data-targetfretboard="${target_fretboard}" name="formulas" id="formulas">
+	`;
+
+	for(var i = 0; i < default_formulas.length; i++)
+	{
+		var formula = default_formulas[i][0];
+		var name = default_formulas[i][1];
+		var nameslug = slugify(name);
+		markup += `
+			<option value="formula-${nameslug}" data-formula="${formula}">${name}</option>
+		`;
+	}
+	markup += `</select><br/><br/>`;
+	return markup;
+}
+
+function createElementFromHTMLAndAppend(html_str, targetid)
+{
+	var pivotDiv = document.createElement("div");
+	pivotDiv.innerHTML = html_str;
+	var container = document.getElementById(targetid);
+	container.appendChild(pivotDiv);
+}
+
+
+createElementFromHTMLAndAppend(createNotesSelectHTML(0), "scales-container");
+createElementFromHTMLAndAppend(generateFormulasHTML(0), "scales-container");
+
 var lastCanvas = 0;
 var currentCanvas = 0;
 var all_fretboards = {};
 
-function CurrentCtx(canvas_index)
+function CurrentCtx()
 {
 	console.assert(currentCanvas >= 0 && currentCanvas <= lastCanvas);
 	var c = document.getElementById("fretcanvas" + currentCanvas);
@@ -267,8 +330,9 @@ function fill_rect(x, y, w, h, color)
 	ctx.fillRect(x, y, w, h);
 }
 
-function create_fretboard(dx, dy, width, height, spacing_limits, thin_string_height, string_inc, frets)
+function create_fretboard(dx, dy, width, height, spacing_limits, thin_string_height, string_inc, start_fret, frets)
 {
+	start_fret = Number(start_fret);
 	var first_string_start = spacing_limits;
 	var last_string_start = height - spacing_limits;
 	var space_to_place_strings = height - spacing_limits * 2;
@@ -277,9 +341,9 @@ function create_fretboard(dx, dy, width, height, spacing_limits, thin_string_hei
 	var fret_space = width / frets;
 	fill_rect(dx, dy, width, height, "#FEFFA2");
 
-	for(var i = 0; i < frets; i++)
+	for(var i = start_fret; i < start_fret + frets; i++)
 	{
-		fill_rect(dx + i * fret_space, dy, 3, height, "#7E7E7E");
+		fill_rect(dx + (i - start_fret) * fret_space, dy, 3, height, "#7E7E7E");
 	}
 
 	for(var i = 0; i < 6; i++)
@@ -293,7 +357,11 @@ function create_fretboard(dx, dy, width, height, spacing_limits, thin_string_hei
 	function draw_fret_circle(fretnum, doble)
 	{
 		var circle_color = "#C4AF86"
-		if(frets >= fretnum)
+
+		draw_fret_number(start_fret, fretnum);
+
+		fretnum -= start_fret;
+		if(fretnum > 0 && fretnum <= frets)
 		{
 			if(doble)
 			{
@@ -304,6 +372,18 @@ function create_fretboard(dx, dy, width, height, spacing_limits, thin_string_hei
 			{
 				fill_circle(dx + fret_space * (fretnum - 1) + fret_space / 2, dy + height / 2, 10, circle_color);										
 			}
+
+		}
+
+	}
+
+	function draw_fret_number(start_fret, fretnum)
+	{
+		var circle_color = "#000000"
+		var fretnum2 = fretnum - start_fret;
+		if(fretnum2 > 0 && fretnum2 <= frets)
+		{
+			draw_text(dx + fret_space * (fretnum2 - 1) + fret_space / 2, dy + height + 15, fretnum);
 		}
 	}
 
@@ -318,39 +398,60 @@ function create_fretboard(dx, dy, width, height, spacing_limits, thin_string_hei
 	draw_fret_circle(21);
 	draw_fret_circle(24, true);
 
+	function draw_text(cx, cy, text)
+	{
+		var ctx = CurrentCtx();
+		ctx.fillStyle = "black";
+		ctx.textAlign = "center";
+		ctx.textBaseline = "middle";
+		ctx.fillText(text, cx, cy);
+	}
+
 	return {
 		get_note_position: function(string, fret) {
 			var x = fret_space * (fret - 1) + fret_space / 2;
 			var y = first_string_start + string * space_between_strings - string_height / 2;
 			return [x, y];
 		},
-		render_scale: function(fretboard_array, render_method) {
+		render_scale: function(fretboard_array, render_method, start_fret, num_frets) {
+			start_fret = Number(start_fret);
+			var ignore_open = start_fret > 0;
 			for(var i = 0; i < fretboard_array.length; i++)
 			{
-				for(var j = 0; j < fretboard_array[i].length; j++)
+				for(var j = start_fret; j < fretboard_array[i].length; j++)
 				{
 					var item = fretboard_array[i][j];
 					var note = item["note"];
 					var interval = item["interval"];
 					if(note !== undefined)
 					{
-						this.draw_note(i, j, item[render_method], intervals_colors[interval]);
+						this.draw_note(i, j - start_fret, item[render_method], intervals_colors[interval], ignore_open);
 					}
 				}
 			}
 		},
-		draw_note: function (string, fret, text, color) {
+		draw_note: function (string, fret, text, color, ignore_open) {
+			if(fret == 0 && ignore_open)
+			{
+				return;
+			}
+
 			var ctx = CurrentCtx();
 			var position = this.get_note_position(string, fret);
 			if(color === undefined)
 			{
 				color = "black";
 			}
-			fill_circle(dx + position[0], dy + position[1], 12, color);
+			var defx = dx + position[0];
+			if(fret == 0)
+			{
+				defx = dx - 15;
+			}
+			fill_circle(defx, dy + position[1], 12, color);
 			ctx.fillStyle = "white";
 			ctx.textAlign = "center";
 			ctx.textBaseline = "middle";
-			ctx.fillText(text, dx + position[0], dy + position[1]);
+			ctx.fillText(text, defx, dy + position[1]);
 		}
 	};
 }
@@ -363,6 +464,7 @@ function fill_circle(cx, cy, radius, color)
 	ctx.fillStyle = color;
 	ctx.fill();
 }
+
 
 function check_valid_note(note)
 {
@@ -517,11 +619,8 @@ function generate_scale(frets, base_note, formula, representation)
 
 function generate()
 {
-	var ctx = CurrentCtx();
-	ctx.font = "bold 14px Arial";
-
-	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-	var fretboard = create_fretboard(40, 50, 800, 200, 15, 1, 1, 24);
+	var start_fret = document.getElementById("txt-starting-fret").value;
+	var num_frets = document.getElementById("txt-num-frets").value;
 
 	var select_note = document.getElementById("select-notes");
 	var selected_note = select_note[select_note.selectedIndex].value;
@@ -539,15 +638,23 @@ function generate()
  	var custom_formula_txt = document.getElementById("txt-formula").value.trim();
 	var custom_formula = custom_formula_txt.split(/\s+/);
 	var name;
+
+
+	var ctx = CurrentCtx();
+	ctx.font = "bold 14px Arial";
+
+	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+	var fretboard = create_fretboard(40, 50, 800, 200, 15, 1, 1, start_fret, num_frets);
+
 	if(custom_formula.length > 1)
 	{
 		name = selected_note + " with custom formula " + custom_formula_txt;
-		scale = generate_scale(25, selected_note, custom_formula);
+		scale = generate_scale(num_frets+1, selected_note, custom_formula);
 	}
 	else
 	{
 		name = selected_note + " " + selected_item.text;
-		scale = generate_scale(25, selected_note, data_formula);
+		scale = generate_scale(num_frets+1, selected_note, data_formula);
 	}
 
 	var prev_style = ctx.font;
@@ -557,19 +664,22 @@ function generate()
 	ctx.textBaseline = "middle";
 	ctx.fillText(name, 30, 30);
 	ctx.font = prev_style;
-	fretboard.render_scale(scale, selected_render);
+	fretboard.render_scale(scale, selected_render, start_fret, num_frets);
 
 	loadOrSaveCurrent(true);
 }
 
 function forAllInputs (fn)
 {
-	var ids = ["select-notes", "formulas", "txt-formula", "select-rendertype"];
+	var ids = ["select-notes", "formulas", "txt-formula", "select-rendertype", "txt-starting-fret", "txt-num-frets"];
 	for(var i = 0; i < ids.length; i++)
 	{
 		var current_id = ids[i];
 		var item = document.getElementById(current_id);
-		fn(item);
+		if(item != null)
+		{
+			fn(item);			
+		}
 	}
 }
 
@@ -579,9 +689,13 @@ function configChanges()
 	{
 		item.addEventListener("change", function() {
 			generate();
+			saveItem = document.getElementById("data-save");
+			saveItem.value = JSON.stringify(all_fretboards);
 		});
 		item.addEventListener("keyup", function() {
 			generate();
+			saveItem = document.getElementById("data-save");
+			saveItem.value = JSON.stringify(all_fretboards);
 		});
 	});
 }
@@ -598,7 +712,7 @@ function loadOrSaveCurrent (save)
 		object = all_fretboards[currentCanvas];
 	}
 	if(object == undefined) return;
-	var ids = ["select-notes", "formulas", "txt-formula", "select-rendertype"];
+	var ids = ["select-notes", "formulas", "txt-formula", "select-rendertype", "txt-starting-fret", "txt-num-frets"];
 	for(var i = 0; i < ids.length; i++)
 	{
 		var current_id = ids[i];
