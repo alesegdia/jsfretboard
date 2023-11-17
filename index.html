@@ -50,6 +50,7 @@ label { font-family: sans-serif; }
 <br/>
 <br/>
 
+<!--
 <button type="button" id="btn-addcanvas" onclick="loadData()">Load</button>
 <input type="text" id="data-load"/>
 <br/>
@@ -58,6 +59,7 @@ label { font-family: sans-serif; }
 
 <br/>
 <br/>
+-->
 
 </div>
 
@@ -185,6 +187,7 @@ function CurrentCtx()
 var notes_natural 	= [ "C", "D", "E", "F", "G", "A", "B" ];
 var intervals_pures = [  0,   2,   4,   5,   7,   9,  11  ];
 
+// var string_start_notes = [ "G", "D", "A", "E" ];
 var string_start_notes = [ "E", "B", "G", "D", "A", "E" ];
 
 var intervals_colors = {
@@ -347,7 +350,7 @@ function create_fretboard(dx, dy, width, height, spacing_limits, thin_string_hei
 		fill_rect(dx + (i - start_fret) * fret_space, dy, 3, height, "#7E7E7E");
 	}
 
-	for(var i = 0; i < 6; i++)
+	for(var i = 0; i < string_start_notes.length; i++)
 	{
 		string_height = thin_string_height + string_inc * i;
 		startY = first_string_start + i * space_between_strings - string_height / 2;
