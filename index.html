@@ -39,6 +39,9 @@ label { font-family: sans-serif; }
 <label>Fret num</label>
 <input type="text" id="txt-num-frets" value="24" />
 <br/>
+<label>Canvas width</label>
+<input type="text" id="txt-canvas-width" value="850" />
+<br/>
 <br/>
 
 <label for="select-fretboard">Fretboards</label>
@@ -50,7 +53,6 @@ label { font-family: sans-serif; }
 <br/>
 <br/>
 
-<!--
 <button type="button" id="btn-addcanvas" onclick="loadData()">Load</button>
 <input type="text" id="data-load"/>
 <br/>
@@ -59,29 +61,42 @@ label { font-family: sans-serif; }
 
 <br/>
 <br/>
--->
 
 </div>
 
 <div id="canvas-container" style="float: left">
-<canvas id="fretcanvas0" width="850" height="270"></canvas>
+<!--<canvas id="fretcanvas0" width="850" height="270"></canvas>-->
 </div>
 
 </div>
 
 <script>
 
+function rmAllCanvas()
+{
+	var canvasContainer = document.getElementById("canvas-container");
+	canvasContainer.innerHTML = "";
+}
+
 function loadData()
 {
+	lastCanvas = -1;
+	currentCanvas = 0;
+	all_fretboards = {};
+
+	rmAllCanvas();
 	var loadData = document.getElementById("data-load");
 	all_fretboards = JSON.parse(loadData.value);
 
 	for (const [key, value] of Object.entries(all_fretboards))
 	{
 		currentCanvas = key;
+		loadOrSaveCurrent(false);
 		addCanvas();
-		loadOrSaveCurrent();
+		generate();
 	}
+
+	refreshFretboardSelects();
 }
 
 function createNotesSelectHTML(id)
@@ -172,7 +187,7 @@ function createElementFromHTMLAndAppend(html_str, targetid)
 createElementFromHTMLAndAppend(createNotesSelectHTML(0), "scales-container");
 createElementFromHTMLAndAppend(generateFormulasHTML(0), "scales-container");
 
-var lastCanvas = 0;
+var lastCanvas = -1;
 var currentCanvas = 0;
 var all_fretboards = {};
 
@@ -623,6 +638,9 @@ function generate_scale(frets, base_note, formula, representation)
 
 function generate()
 {
+	var fretcanvas = document.getElementById("fretcanvas" + currentCanvas);
+	fretcanvas.width = Number(document.getElementById("txt-canvas-width").value);
+
 	var start_fret = Number(document.getElementById("txt-starting-fret").value);
 	if(start_fret > 0)
 	{
@@ -652,11 +670,11 @@ function generate()
 	ctx.font = "bold 14px Arial";
 
 	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-	var fretboard = create_fretboard(40, 50, 800, 200, 15, 1, 1, start_fret, num_frets);
+	var fretboard = create_fretboard(40, 50, ctx.canvas.width - 50, 200, 15, 1, 1, start_fret, num_frets);
 
 	if(custom_formula.length > 1)
 	{
-		name = selected_note + " with custom formula " + custom_formula_txt;
+		name = selected_note + " " + custom_formula_txt;
 		scale = generate_scale(start_fret + num_frets + 1, selected_note, custom_formula);
 	}
 	else
@@ -679,7 +697,7 @@ function generate()
 
 function forAllInputs (fn)
 {
-	var ids = ["select-notes", "formulas", "txt-formula", "select-rendertype", "txt-starting-fret", "txt-num-frets"];
+	var ids = ["select-notes", "formulas", "txt-formula", "select-rendertype", "txt-starting-fret", "txt-num-frets", "txt-canvas-width"];
 	for(var i = 0; i < ids.length; i++)
 	{
 		var current_id = ids[i];
@@ -720,7 +738,7 @@ function loadOrSaveCurrent (save)
 		object = all_fretboards[currentCanvas];
 	}
 	if(object == undefined) return;
-	var ids = ["select-notes", "formulas", "txt-formula", "select-rendertype", "txt-starting-fret", "txt-num-frets"];
+	var ids = ["select-notes", "formulas", "txt-formula", "select-rendertype", "txt-starting-fret", "txt-num-frets", "txt-canvas-width"];
 	for(var i = 0; i < ids.length; i++)
 	{
 		var current_id = ids[i];
@@ -775,8 +793,18 @@ function refreshFretboardSelects()
 function addCanvas()
 {
 	lastCanvas++;
+
 	var newCanvas = document.createElement("div");
-	newCanvas.innerHTML = "<div><canvas id=\"fretcanvas" + lastCanvas + "\" width=\"850\" height=\"270\"></canvas></div>";
+	var canvasWidth;
+	try
+	{
+		canvasWidth = all_fretboards[currentCanvas]["txt-canvas-width"];
+	}
+	catch(error)
+	{
+		canvasWidth = document.getElementById("txt-canvas-width").value;
+	}
+	newCanvas.innerHTML = "<div style=\"display:inline;\"><canvas width=\"" + canvasWidth + "\" height=\"270\" id=\"fretcanvas" + lastCanvas + "\"></canvas></div>";
 	document.getElementById("canvas-container").appendChild(newCanvas.firstChild);
 	refreshFretboardSelects();
 	
@@ -784,6 +812,11 @@ function addCanvas()
 	currentCanvas = lastCanvas;
 	generate();
 	currentCanvas = prevCanvas;
+}
+
+function rmCanvas()
+{
+	alert("not implemented");
 }
 
 function changedFretboards(elem)
@@ -796,7 +829,7 @@ function changedFretboards(elem)
 refreshFretboardSelects();
 
 configChanges();
-generate();
+//generate();
 
 </script> 
 
