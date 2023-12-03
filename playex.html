@@ -14,19 +14,28 @@ var whatToPlay = [
 	"la escala",
 	"la escala pentatónica",
 	"el arpegio",
-	"el acorde",
 	];
 var tipo = ["menor", "mayor", "disminuido", "aumentado"];
 var modes = ["jónico", "dórico", "frigio", "lidio", "mixolidio", "eólico", "locrio"];
 
 function generateExercise()
 {
-	return "Toca " + getWhatToPlay(whatToPlay) + " de " + getRandomElement(notes) + " " + getWhereToPlay();
+	switch(dice(6))
+	{
+	case 0:
+	case 1:
+	case 2:
+	case 3:
+	case 4:
+		return "Toca " + getWhatToPlayScale(whatToPlay) + " de " + getRandomElement(notes) + " " + getWhereToPlay();
+	case 5:
+		return "Toca el acorde de " + getRandomElement(notes) + " " + getWhereToPlayChord();
+	}
 }
 
-function getWhatToPlay()
+function getWhatToPlayScale()
 {
-	switch(dice(5))
+	switch(dice(4))
 	{
 	case 0:
 		return "la escala " + getRandomElement(tipo);
@@ -36,8 +45,6 @@ function getWhatToPlay()
 		return "la escala pentatónica " + getRandomElement(["mayor", "menor"]);
 	case 3:
 		return "el arpegio " + getRandomElement(tipo);
-	case 4:
-		return "el acorde " + getRandomElement(tipo);
 	}
 }
 
@@ -52,6 +59,22 @@ function getWhereToPlay()
 	case 2:
 		return " con 3npc partiendo de cuerda " + getRandomElement([1,2,3,4,5,6]);
 	}
+}
+
+function getWhereToPlayChord()
+{
+	var decision = {
+		0: function() { return "en la zona " + getRandomElement(["central", "derecha", "izquierda"]) + " del mastil con fundamental en " + getRandomElement([1,2,3,4,5,6]) + " cuerda"; },
+		1: function() { return "en posición " + getRandomElement(["C","A","G","E","D",1,2,3,4,5]) + " de CAGED"; },
+	};
+	var rnd = dice(Object.keys(decision).length);
+	var value;
+	Object.keys(decision).forEach(key => {
+  		if(key == rnd) {
+  			value = decision[key]();
+  		}
+	});
+	return value;
 }
 
 function dice(n)
