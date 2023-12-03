@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+a, h1 { font-family: sans-serif; }
+label { font-family: sans-serif; }
+</style>
+</head>
+
+<script>
+
+var notes = ["A", "A#", "Bb", "B", "C", "C#", "Db", "D", "D#", "Eb", "E", "F", "F#", "Gb", "G", "G#", "Ab"];
+var whatToPlay = [
+	"la escala",
+	"la escala pentatónica",
+	"el arpegio",
+	"el acorde",
+	];
+var tipo = ["menor", "mayor", "disminuido", "aumentado"];
+var modes = ["jónico", "dórico", "frigio", "lidio", "mixolidio", "eólico", "locrio"];
+
+function generateExercise()
+{
+	return "Toca " + getWhatToPlay(whatToPlay) + " de " + getRandomElement(notes) + " " + getWhereToPlay();
+}
+
+function getWhatToPlay()
+{
+	switch(dice(5))
+	{
+	case 0:
+		return "la escala " + getRandomElement(tipo);
+	case 1:
+		return "el modo " + getRandomElement(modes);
+	case 2:
+		return "la escala pentatónica " + getRandomElement(["mayor", "menor"]);
+	case 3:
+		return "el arpegio " + getRandomElement(tipo);
+	case 4:
+		return "el acorde " + getRandomElement(tipo);
+	}
+}
+
+function getWhereToPlay()
+{
+	switch(dice(3))
+	{
+	case 0:
+		return "en la zona " + getRandomElement(["central", "derecha", "izquierda"]) + " del mastil con fundamental en " + getRandomElement([1,2,3,4,5,6]) + " cuerda";
+	case 1:
+		return "en posición " + getRandomElement(["C","A","G","E","D",1,2,3,4,5]) + " de CAGED";
+	case 2:
+		return " con 3npc partiendo de cuerda " + getRandomElement([1,2,3,4,5,6]);
+	}
+}
+
+function dice(n)
+{
+	return Math.floor(Math.random() * n);
+}
+
+function getRandomElement(items)
+{
+	return items[Math.floor(Math.random()*items.length)];
+}
+
+function generate()
+{
+	var div = document.getElementById("content");
+	div.innerHTML += "<br/></br>" + generateExercise();
+}
+
+function clear()
+{
+	var div = document.getElementById("content");
+	div.innerHTML = "<br/>";
+}
+</script> 
+
+<body>
+
+
+<h1>JSFretboards</h1>
+
+
+<button onClick="generate()">Generate</button>
+<button onClick="clear()">Clear</button><br/>
+<h2>
+<div id="content">
+
+</div>
+</h2>
+</body>
+</html>
