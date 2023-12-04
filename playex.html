@@ -10,21 +10,18 @@ label { font-family: sans-serif; }
 <script>
 
 var notes = ["A", "A#", "Bb", "B", "C", "C#", "Db", "D", "D#", "Eb", "E", "F", "F#", "Gb", "G", "G#", "Ab"];
-var whatToPlay = [
-	"la escala",
-	"la escala pentatónica",
-	"el arpegio",
-	"la triada",
-];
+var nextExerciseID = 0;
 
 function generateExercise(scales, chords)
 {
-	var scaleDecision = function() { return "Toca " + getWhatToPlayScale(whatToPlay) + " de " + getRandomElement(notes) + " " + getWhereToPlayScale(); };
+	var scaleDecision = function() { return "Toca " + getWhatToPlayScale() + " de " + getRandomElement(notes) + " " + getWhereToPlayScale(); };
 
 	var chordDecisions = [
 		function() { return "Toca el acorde " + getRandomElement(["menor", "mayor", "disminuido", "aumentado"]) + " de " + getRandomElement(notes) + " " + getWhereToPlayChord(); },
 		function() {
-			return "Toca la triada " + getRandomElement(["menor", "mayor", "disminuida", "aumentada"]) + " de " + getRandomElement(notes) + " y sus inversiones en las cuerdas " + getRandomElement(["1, 2 y 3", "2, 3 y 4", "3, 4 y 5", "4, 5 y 6"]);
+			return "Toca la triada " + getRandomElement(["menor", "mayor", "disminuida", "aumentada"]) +
+				   " de " + getRandomElement(notes) + " y sus inversiones en las cuerdas " +
+				   getRandomElement(["1, 2 y 3", "2, 3 y 4", "3, 4 y 5", "4, 5 y 6"]);
 		},
 	];
 
@@ -47,14 +44,30 @@ function generateExercise(scales, chords)
 	}
 }
 
+function getRandomMajorType(female)
+{
+	//var elements = female ? ["menor", "mayor", "disminuido", "aumentado"] : ["menor", "mayor", "disminuida", "aumentada"];
+	var elements = ["menor", "mayor", "disminuido", "aumentado"];
+	var finalElements = [];
+
+	elements.forEach((element) => {
+		var isChecked = document.getElementById(element).checked;
+		if(isChecked) {
+			finalElements.push(element);
+		}
+	});
+
+	return getRandomElement(finalElements);
+}
+
 function getWhatToPlayScale()
 {
 	var decisions = [
 		function() { return "la escala " + getRandomElement(["mayor", "menor"]); },
 		function() { return "el modo " + getRandomElement(["jónico", "dórico", "frigio", "lidio", "mixolidio", "eólico", "locrio"]); },
 		function() { return "la escala pentatónica " + getRandomElement(["mayor", "menor"]); },
-		function() { return "el arpegio " + getRandomElement(["menor", "mayor", "disminuido", "aumentado"]); },
-		function() { return "la triada " + getRandomElement(["menor", "mayor", "disminuida", "aumentada"]); },		
+		function() { return "el arpegio " + getRandomMajorType(false); },
+		function() { return "la triada " + getRandomMajorType(true); },		
 	];
 	return decide(decisions);
 }
@@ -105,13 +118,15 @@ function getRandomElement(items)
 function generate(scales, chords)
 {
 	var div = document.getElementById("content");
-	div.innerHTML += generateExercise(scales, chords) + "<br/>";
+	div.innerHTML += "<input type=\"checkbox\" onchange=\"changeCheckbox(this)\" id=\"checkex" + nextExerciseID + "\"><a id=\"ex" + nextExerciseID + "\">" + generateExercise(scales, chords) + "</a><br/>";
+	nextExerciseID++;
 }
 
 function clearAll()
 {
 	var div = document.getElementById("content");
 	div.innerHTML = "";
+	nextExerciseID = 0;
 }
 
 function showToolbox(doShow)
@@ -126,6 +141,21 @@ function showToolbox(doShow)
 	}
 }
 
+function changeCheckbox(obj)
+{
+	var ex = obj.id;
+	ex = ex.slice(7,ex.length);
+	var item = document.getElementById("ex" + ex);
+	if(obj.checked)
+	{
+		item.style.textDecoration = "line-through";		
+	}
+	else
+	{
+		item.style.textDecoration = "";
+	}
+}
+
 </script> 
 
 <body>
@@ -134,23 +164,36 @@ function showToolbox(doShow)
 <h1>Generador ejercicios guitarra</h1>
 
 <div id="toolset">
+
+<b><a>Tipo de acorde/escala</a></b><br/>
+<input type="checkbox" id="menor" checked> <a>mayor</a><br/>
+<input type="checkbox" id="mayor" checked> <a>menor</a><br/>
+<input type="checkbox" id="disminuido" checked> <a>disminuido</a><br/>
+<input type="checkbox" id="aumentado" checked> <a>aumentado</a><br/>
+
+<br/>
+
+<b><a>Tipo de ejercicio de escalas</a></b><br/>
 <input type="checkbox" id="caged" checked> <a>CAGED</a><br/>
 <input type="checkbox" id="3npc" checked> <a>3npc partiendo de cuerda</a><br/>
 <input type="checkbox" id="3npc2" checked> <a>3npc partiendo de cuerda en posición X</a><br/>
 <input type="checkbox" id="zona" checked> <a>en zona izquierda/derecha/central</a><br/>
 
+<br/>
+
 <button onClick="generate(true, false)">Generar ejercicio escala</button><br/><br/>
 <button onClick="generate(false, true)">Generar ejercicio acorde</button><br/><br/>
 <button onClick="generate(true, true)">Generar ejercicio</button><br/><br/>
 <button onClick="clearAll()">Borrar todo</button><br/><br/>
+
 </div>
 <button onClick="showToolbox(true)">Mostrar</button>
 <button onClick="showToolbox(false)">Ocultar</button>
 
-<h2>
+<h3>
 <div id="content">
 
 </div>
-</h2>
+</h3>
 </body>
 </html>
