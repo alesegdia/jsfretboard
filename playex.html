@@ -14,67 +14,82 @@ var whatToPlay = [
 	"la escala",
 	"la escala pentatónica",
 	"el arpegio",
-	];
-var tipo = ["menor", "mayor", "disminuido", "aumentado"];
-var modes = ["jónico", "dórico", "frigio", "lidio", "mixolidio", "eólico", "locrio"];
+	"la triada",
+];
 
-function generateExercise()
+function generateExercise(scales, chords)
 {
-	switch(dice(6))
+	var scaleDecision = function() { return "Toca " + getWhatToPlayScale(whatToPlay) + " de " + getRandomElement(notes) + " " + getWhereToPlayScale(); };
+
+	var chordDecisions = [
+		function() { return "Toca el acorde " + getRandomElement(["menor", "mayor", "disminuido", "aumentado"]) + " de " + getRandomElement(notes) + " " + getWhereToPlayChord(); },
+		function() {
+			return "Toca la triada " + getRandomElement(["menor", "mayor", "disminuida", "aumentada"]) + " de " + getRandomElement(notes) + " y sus inversiones en las cuerdas " + getRandomElement(["1, 2 y 3", "2, 3 y 4", "3, 4 y 5", "4, 5 y 6"]);
+		},
+	];
+
+	var chordDecision = function() { return decide(chordDecisions); };
+	if(scales && chords)
 	{
-	case 0:
-	case 1:
-	case 2:
-	case 3:
-	case 4:
-		return "Toca " + getWhatToPlayScale(whatToPlay) + " de " + getRandomElement(notes) + " " + getWhereToPlay();
-	case 5:
-		return "Toca el acorde " + getRandomElement(tipo) + " de " + getRandomElement(notes) + " " + getWhereToPlayChord();
+		return decide([scaleDecision, chordDecision]);
+	}
+	else if(scales)
+	{
+		return scaleDecision();
+	}
+	else if(chords)
+	{
+		return chordDecision();
+	}
+	else
+	{
+		return "Elige escala o acorde.";
 	}
 }
 
 function getWhatToPlayScale()
 {
-	switch(dice(4))
-	{
-	case 0:
-		return "la escala " + getRandomElement(tipo);
-	case 1:
-		return "el modo " + getRandomElement(modes);
-	case 2:
-		return "la escala pentatónica " + getRandomElement(["mayor", "menor"]);
-	case 3:
-		return "el arpegio " + getRandomElement(tipo);
-	}
+	var decisions = [
+		function() { return "la escala " + getRandomElement(["mayor", "menor"]); },
+		function() { return "el modo " + getRandomElement(["jónico", "dórico", "frigio", "lidio", "mixolidio", "eólico", "locrio"]); },
+		function() { return "la escala pentatónica " + getRandomElement(["mayor", "menor"]); },
+		function() { return "el arpegio " + getRandomElement(["menor", "mayor", "disminuido", "aumentado"]); },
+		function() { return "la triada " + getRandomElement(["menor", "mayor", "disminuida", "aumentada"]); },		
+	];
+	return decide(decisions);
 }
 
-function getWhereToPlay()
+function getWhereToPlayScale()
 {
-	switch(dice(3))
-	{
-	case 0:
-		return "en la zona " + getRandomElement(["central", "derecha", "izquierda"]) + " del mastil con fundamental en " + getRandomElement([1,2,3,4,5,6]) + " cuerda";
-	case 1:
-		return "en posición " + getRandomElement(["C","A","G","E","D",1,2,3,4,5]) + " de CAGED";
-	case 2:
-		return " con 3npc partiendo de cuerda " + getRandomElement([1,2,3,4,5,6]);
+	var decisions = {
+		"zona": function() { return "en la zona " + getRandomElement(["central", "derecha", "izquierda"]) + " del mastil con fundamental en " + getRandomElement([1,2,3,4,5,6]) + " cuerda"; },
+		"caged":  function() { return "en posición " + getRandomElement(["C","A","G","E","D",1,2,3,4,5]) + " de CAGED"; },
+		"3npc": function() { return " con 3npc partiendo de cuerda " + getRandomElement([1,2,3,4,5,6]); },
+		"3npc2":  function() { return " con 3npc en posición " + getRandomElement([1,2,3,4,5,6,7]) + " partiendo de cuerda " + getRandomElement([1,2,3,4,5,6]); }
+	};
+	var decisionsFiltered = [];
+	for(const [key,value] of Object.entries(decisions)) {
+		var checked = document.getElementById(key).checked;
+		if(checked)
+		{
+			decisionsFiltered.push(value);
+		}
 	}
+	return decide(decisionsFiltered);
 }
 
 function getWhereToPlayChord()
 {
-	var decision = {
-		0: function() { return "en la zona " + getRandomElement(["central", "derecha", "izquierda"]) + " del mastil con fundamental en " + getRandomElement([1,2,3,4,5,6]) + " cuerda"; },
-		1: function() { return "en posición " + getRandomElement(["C","A","G","E","D",1,2,3,4,5]) + " de CAGED"; },
-	};
-	var rnd = dice(Object.keys(decision).length);
-	var value;
-	Object.keys(decision).forEach(key => {
-  		if(key == rnd) {
-  			value = decision[key]();
-  		}
-	});
-	return value;
+	var decisions = [
+		function() { return "en la zona " + getRandomElement(["central", "derecha", "izquierda"]) + " del mastil con fundamental en " + getRandomElement([1,2,3,4,5,6]) + " cuerda"; },
+		function() { return "en posición " + getRandomElement(["C","A","G","E","D",1,2,3,4,5]) + " de CAGED"; },
+	];
+	return decide(decisions);
+}
+
+function decide(decisions)
+{
+	return decisions[dice(decisions.length)]();
 }
 
 function dice(n)
@@ -87,17 +102,30 @@ function getRandomElement(items)
 	return items[Math.floor(Math.random()*items.length)];
 }
 
-function generate()
+function generate(scales, chords)
 {
 	var div = document.getElementById("content");
-	div.innerHTML += "<br/></br>" + generateExercise();
+	div.innerHTML += generateExercise(scales, chords) + "<br/>";
 }
 
-function clear()
+function clearAll()
 {
 	var div = document.getElementById("content");
-	div.innerHTML = "<br/>";
+	div.innerHTML = "";
 }
+
+function showToolbox(doShow)
+{
+	var div = document.getElementById("toolset");
+	if(doShow) {
+		div.style.display = "block";
+	}
+	else
+	{
+		div.style.display = "none";
+	}
+}
+
 </script> 
 
 <body>
@@ -105,9 +133,20 @@ function clear()
 
 <h1>Generador ejercicios guitarra</h1>
 
+<div id="toolset">
+<input type="checkbox" id="caged" checked> <a>CAGED</a><br/>
+<input type="checkbox" id="3npc" checked> <a>3npc partiendo de cuerda</a><br/>
+<input type="checkbox" id="3npc2" checked> <a>3npc partiendo de cuerda en posición X</a><br/>
+<input type="checkbox" id="zona" checked> <a>en zona izquierda/derecha/central</a><br/>
 
-<button onClick="generate()">Generate</button>
-<button onClick="clear()">Clear</button><br/>
+<button onClick="generate(true, false)">Generar ejercicio escala</button><br/><br/>
+<button onClick="generate(false, true)">Generar ejercicio acorde</button><br/><br/>
+<button onClick="generate(true, true)">Generar ejercicio</button><br/><br/>
+<button onClick="clearAll()">Borrar todo</button><br/><br/>
+</div>
+<button onClick="showToolbox(true)">Mostrar</button>
+<button onClick="showToolbox(false)">Ocultar</button>
+
 <h2>
 <div id="content">
 
