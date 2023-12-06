@@ -62,14 +62,22 @@ function getRandomMajorType(female)
 
 function getWhatToPlayScale()
 {
-	var decisions = [
-		function() { return "la escala " + getRandomElement(["mayor", "menor"]); },
-		function() { return "el modo " + getRandomElement(["jónico", "dórico", "frigio", "lidio", "mixolidio", "eólico", "locrio"]); },
-		function() { return "la escala pentatónica " + getRandomElement(["mayor", "menor"]); },
-		function() { return "el arpegio " + getRandomMajorType(false); },
-		function() { return "la triada " + getRandomMajorType(true); },		
-	];
-	return decide(decisions);
+	var decisions = {
+		"escala": function() { return "la escala " + getRandomElement(["mayor", "menor"]); },
+		"modos": function() { return "el modo " + getRandomElement(["jónico", "dórico", "frigio", "lidio", "mixolidio", "eólico", "locrio"]); },
+		"escalapent": function() { return "la escala pentatónica " + getRandomElement(["mayor", "menor"]); },
+		"arpegios": function() { return "el arpegio " + getRandomMajorType(false); },
+		"triada": function() { return "la triada " + getRandomMajorType(true); },		
+	};
+	var decisionsFiltered = [];
+	for(const [key,value] of Object.entries(decisions)) {
+		var checked = document.getElementById(key).checked;
+		if(checked)
+		{
+			decisionsFiltered.push(value);
+		}
+	}
+	return decide(decisionsFiltered);
 }
 
 function getWhereToPlayScale()
@@ -118,7 +126,7 @@ function getRandomElement(items)
 function generate(scales, chords)
 {
 	var div = document.getElementById("content");
-	div.innerHTML += "<input type=\"checkbox\" onchange=\"changeCheckbox(this)\" id=\"checkex" + nextExerciseID + "\"><a id=\"ex" + nextExerciseID + "\">" + generateExercise(scales, chords) + "</a><br/>";
+	div.innerHTML += "<input type=\"checkbox\" onchange=\"changeCheckbox(this)\" id=\"checkex" + nextExerciseID + "\" /><label for=\"checkex" + nextExerciseID + "\"><a id=\"ex" + nextExerciseID + "\"> " + (nextExerciseID+1) + "." + generateExercise(scales, chords) + "</a></label><br/>";
 	nextExerciseID++;
 }
 
@@ -178,6 +186,15 @@ function changeCheckbox(obj)
 <input type="checkbox" id="3npc" checked> <a>3npc partiendo de cuerda</a><br/>
 <input type="checkbox" id="3npc2" checked> <a>3npc partiendo de cuerda en posición X</a><br/>
 <input type="checkbox" id="zona" checked> <a>en zona izquierda/derecha/central</a><br/>
+
+<br/>
+
+<b><a>Tipo ejercicio escalas</a></b><br/>
+<input type="checkbox" id="escala" checked> <a>Escala</a><br/>
+<input type="checkbox" id="escalapent" checked> <a>Escala pentatónica</a><br/>
+<input type="checkbox" id="modos" checked> <a>Modos</a><br/>
+<input type="checkbox" id="triada" checked> <a>Triadas</a><br/>
+<input type="checkbox" id="arpegios" checked> <a>Arpegios</a><br/>
 
 <br/>
 
