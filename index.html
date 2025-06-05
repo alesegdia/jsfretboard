@@ -172,7 +172,8 @@ function slugify(str)
 
     str = str.replace(/[^a-z0-9 -]/g, '') // remove invalid chars
         .replace(/\s+/g, '-') // collapse whitespace and replace by -
-// ...existing code...
+        .replace(/-+/g, '-'); // collapse dashes
+
     return str;
 }
 
@@ -725,6 +726,11 @@ function get_scale_from_formula(base_note, formula)
 		});
 	}
 	return scale;
+}
+
+function get_interval_name_from_interval(interval)
+{
+	var interval = interval_to_semitones(interval)
 }
 
 /**
