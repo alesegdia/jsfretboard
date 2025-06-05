@@ -72,12 +72,18 @@ label { font-family: sans-serif; }
 
 <script>
 
+/**
+ * Removes all canvas elements from the canvas container.
+ */
 function rmAllCanvas()
 {
 	var canvasContainer = document.getElementById("canvas-container");
 	canvasContainer.innerHTML = "";
 }
 
+/**
+ * Loads data from the input field and redraws the fretboards.
+ */
 function loadData()
 {
 	lastCanvas = -1;
@@ -99,6 +105,11 @@ function loadData()
 	refreshFretboardSelects();
 }
 
+/**
+ * Creates HTML for a select element with musical notes.
+ * @param {string|number} id - The id for the select element.
+ * @returns {string} HTML string for the select element.
+ */
 function createNotesSelectHTML(id)
 {
 	return `
@@ -142,6 +153,11 @@ var default_formulas = [
 	["1 b2 3 4 5 b6 b7", "Phrygian Dominant Scale"]
 ];
 
+/**
+ * Converts a string to a slug.
+ * @param {string} str - The string to slugify.
+ * @returns {string} The slugified string.
+ */
 function slugify(str)
 {
     str = str.replace(/^\s+|\s+$/g, ''); // trim
@@ -156,11 +172,15 @@ function slugify(str)
 
     str = str.replace(/[^a-z0-9 -]/g, '') // remove invalid chars
         .replace(/\s+/g, '-') // collapse whitespace and replace by -
-        .replace(/-+/g, '-'); // collapse dashes
-
+// ...existing code...
     return str;
 }
 
+/**
+ * Generates HTML for a select element with musical formulas.
+ * @param {string|number} target_fretboard - The target fretboard id.
+ * @returns {string} HTML string for the select element.
+ */
 function generateFormulasHTML(target_fretboard)
 {
 	var markup = `
@@ -182,6 +202,11 @@ function generateFormulasHTML(target_fretboard)
 	return markup;
 }
 
+/**
+ * Creates an HTML element from a string and appends it to a target element.
+ * @param {string} html_str - The HTML string to convert to an element.
+ * @param {string} targetid - The id of the target element to append to.
+ */
 function createElementFromHTMLAndAppend(html_str, targetid)
 {
 	var pivotDiv = document.createElement("div");
@@ -198,6 +223,10 @@ var lastCanvas = -1;
 var currentCanvas = 0;
 var all_fretboards = {};
 
+/**
+ * Gets the 2D rendering context for the current canvas.
+ * @returns {CanvasRenderingContext2D} The 2D rendering context.
+ */
 function CurrentCtx()
 {
 	console.assert(currentCanvas >= 0 && currentCanvas <= lastCanvas);
@@ -222,6 +251,11 @@ var intervals_colors = {
 	"b7": "#FF00FF"
 };
 
+/**
+ * Calculates the numerical value of a musical note.
+ * @param {string} note - The musical note (e.g., "C", "A#", "Bb").
+ * @returns {number} The numerical value of the note (0-11).
+ */
 function calculate_note_value(note)
 {
 	var delta = 0;
@@ -245,6 +279,11 @@ function calculate_note_value(note)
 	return interval;
 }
 
+/**
+ * Gets the previous natural note in the musical scale.
+ * @param {string} note - The musical note (e.g., "C", "D#").
+ * @returns {number} The index of the previous natural note in `notes_natural`.
+ */
 function previous_natural_note(note)
 {
 	var note_index = notes_natural.indexOf(note[0], 0) - 1;
@@ -256,6 +295,13 @@ function previous_natural_note(note)
 	return note_index;
 }
 
+/**
+ * Calculates a musical note from a numerical value.
+ * @param {number} value - The numerical value of the note (0-11).
+ * @param {boolean} sharp - Whether to prefer sharp notation.
+ * @param {boolean} force_accidental - Whether to force an accidental even if it's a natural note.
+ * @returns {string} The musical note (e.g., "C", "A#", "Bb").
+ */
 function calculate_note_from_value(value, sharp, force_accidental)
 {
 	if(value > 11)
@@ -320,17 +366,34 @@ function calculate_note_from_value(value, sharp, force_accidental)
 	}
 }
 
+/**
+ * Checks if two notes are enharmonically equivalent.
+ * @param {string} note1 - The first musical note.
+ * @param {string} note2 - The second musical note.
+ * @returns {boolean} True if the notes are enharmonically equivalent, false otherwise.
+ */
 function is_same_note(note1, note2)
 {
 	return calculate_note_value(note1) == calculate_note_value(note2);
 }
 
+/**
+ * Gets the enharmonic equivalent of a note with the opposite accidental.
+ * (e.g., "A#" becomes "Bb", "Gb" becomes "F#").
+ * @param {string} note - The musical note.
+ * @returns {string} The enharmonically equivalent note.
+ */
 function get_analogue_accidental(note)
 {
 	var note_value = calculate_note_value(note);
 	return calculate_note_from_value(note_value, is_flat_note(note));
 }
 
+/**
+ * Converts a musical interval to its semitone value.
+ * @param {string} interval - The musical interval (e.g., "1", "b3", "#5").
+ * @returns {number} The number of semitones in the interval.
+ */
 function interval_to_semitones(interval)
 {
 	var found_mod = null;
@@ -349,6 +412,14 @@ function interval_to_semitones(interval)
 	return intervals_pures[Number(interval) - 1] + delta;
 }
 
+/**
+ * Fills a rectangle on the current canvas.
+ * @param {number} x - The x-coordinate of the top-left corner.
+ * @param {number} y - The y-coordinate of the top-left corner.
+ * @param {number} w - The width of the rectangle.
+ * @param {number} h - The height of the rectangle.
+ * @param {string} color - The fill color of the rectangle.
+ */
 function fill_rect(x, y, w, h, color)
 {
 	var ctx = CurrentCtx();
@@ -356,6 +427,19 @@ function fill_rect(x, y, w, h, color)
 	ctx.fillRect(x, y, w, h);
 }
 
+/**
+ * Creates and draws a fretboard on the canvas.
+ * @param {number} dx - The x-offset for drawing.
+ * @param {number} dy - The y-offset for drawing.
+ * @param {number} width - The width of the fretboard.
+ * @param {number} height - The height of the fretboard.
+ * @param {number} spacing_limits - The spacing at the top and bottom of the strings.
+ * @param {number} thin_string_height - The height of the thinnest string.
+ * @param {number} string_inc - The increment in height for each subsequent string.
+ * @param {number|string} start_fret - The starting fret number.
+ * @param {number} frets - The total number of frets to display.
+ * @returns {object} An object with methods to interact with the fretboard.
+ */
 function create_fretboard(dx, dy, width, height, spacing_limits, thin_string_height, string_inc, start_fret, frets)
 {
 	start_fret = Number(start_fret);
@@ -482,6 +566,13 @@ function create_fretboard(dx, dy, width, height, spacing_limits, thin_string_hei
 	};
 }
 
+/**
+ * Fills a circle on the current canvas.
+ * @param {number} cx - The x-coordinate of the center of the circle.
+ * @param {number} cy - The y-coordinate of the center of the circle.
+ * @param {number} radius - The radius of the circle.
+ * @param {string} color - The fill color of the circle.
+ */
 function fill_circle(cx, cy, radius, color)
 {
 	var ctx = CurrentCtx();
@@ -492,6 +583,12 @@ function fill_circle(cx, cy, radius, color)
 }
 
 
+/**
+ * Checks if a note string is valid.
+ * Asserts that the note is 1 or 2 characters, the first character is a natural note,
+ * and the second character (if present) is 'b' or '#'.
+ * @param {string} note - The musical note string.
+ */
 function check_valid_note(note)
 {
 	console.assert(note.length == 1 || note.length == 2);
@@ -502,18 +599,35 @@ function check_valid_note(note)
 	}
 }
 
+/**
+ * Checks if a note is a flat note.
+ * @param {string} note - The musical note.
+ * @returns {boolean} True if the note is flat, false otherwise.
+ */
 function is_flat_note(note)
 {
 	check_valid_note(note);
 	return note[1] == "b";
 }
 
+/**
+ * Checks if a note is a sharp note.
+ * @param {string} note - The musical note.
+ * @returns {boolean} True if the note is sharp, false otherwise.
+ */
 function is_sharp_note(note)
 {
 	check_valid_note(note);
 	return note[1] == "#";
 }
 
+/**
+ * Calculates a note by transposing a base note by a number of semitones.
+ * @param {string} base_note - The starting musical note.
+ * @param {number} semitones - The number of semitones to transpose.
+ * @param {boolean} [sharp=true] - Whether to prefer sharp notation for the result.
+ * @returns {string} The resulting musical note.
+ */
 function calculate_note_from(base_note, semitones, sharp)
 {
 	if(sharp === undefined)
@@ -524,6 +638,12 @@ function calculate_note_from(base_note, semitones, sharp)
 	return calculate_note_from_value(value, sharp);
 }
 
+/**
+ * Gets the musical note at a specific string and fret position.
+ * @param {number} string - The string number (0-indexed).
+ * @param {number} fret - The fret number.
+ * @returns {string} The musical note at the given position.
+ */
 function get_note_in_position(string, fret)
 {
 	var string_note = string_start_notes[string];
@@ -531,9 +651,17 @@ function get_note_in_position(string, fret)
 	return note;
 }
 
+/**
+ * (This function seems incomplete or has a typo: `get_note_`)
+ * Gets the semitone value of a note at a specific string and fret, relative to a base note.
+ * @param {number} string - The string number (0-indexed).
+ * @param {number} fret - The fret number.
+ * @param {string} base_note - The base note for comparison.
+ * @returns {string} The musical note at the given position.
+ */
 function get_note_in_position_semitones(string, fret, base_note)
 {
-	var base_note_index = get_note_
+	var base_note_index = get_note_ // Potential typo here
 	var string_note = string_start_notes[string];
 	var note = calculate_note_from(string_note, fret);
 	return note;
@@ -556,6 +684,13 @@ var interval_names = {
 	"7": "M7"
 };
 
+/**
+ * Generates a musical scale from a base note and a formula.
+ * @param {string} base_note - The root note of the scale.
+ * @param {string[]} formula - An array of interval strings (e.g., ["1", "b3", "5"]).
+ * @returns {object[]} An array of objects, each representing a note in the scale
+ *                     with its `note`, `interval`, and `interval_name`.
+ */
 function get_scale_from_formula(base_note, formula)
 {
 	var scale = [{
@@ -563,6 +698,7 @@ function get_scale_from_formula(base_note, formula)
 		"interval": formula[0],
 		"interval_name": interval_names["1"]
 	}];
+
 
 	for(var i = 1; i < formula.length; i++)
 	{
@@ -591,11 +727,12 @@ function get_scale_from_formula(base_note, formula)
 	return scale;
 }
 
-function get_interval_name_from_interval(interval)
-{
-	var interval = interval_to_semitones(interval)
-}
-
+/**
+ * Creates an empty 2D array representing a fretboard.
+ * @param {number} strings - The number of strings.
+ * @param {number} frets - The number of frets.
+ * @returns {Array<Array<number>>} A 2D array initialized with -1.
+ */
 function create_empty_fretboard_array(strings, frets)
 {
 	var fretboard_array = [];
@@ -611,11 +748,25 @@ function create_empty_fretboard_array(strings, frets)
 	return fretboard_array;
 }
 
+/**
+ * Gets the numerical value of a musical note. (Alias for `calculate_note_value`)
+ * @param {string} note - The musical note.
+ * @returns {number} The numerical value of the note (0-11).
+ */
 function get_note_position(note)
 {
 	return calculate_note_value(note);
 }
 
+/**
+ * Generates a fretboard array populated with notes from a scale.
+ * @param {number} frets - The total number of frets on the fretboard.
+ * @param {string} base_note - The root note of the scale.
+ * @param {string[]} formula - An array of interval strings for the scale.
+ * @param {string} representation - (Unused parameter) The desired representation of notes.
+ * @returns {Array<Array<object>>} A 2D array representing the fretboard,
+ *                                   where each cell contains note information or an empty object.
+ */
 function generate_scale(frets, base_note, formula, representation)
 {
 	var fretboard = create_empty_fretboard_array(string_start_notes.length, frets);
@@ -643,6 +794,9 @@ function generate_scale(frets, base_note, formula, representation)
 	return fretboard;
 }
 
+/**
+ * Generates and renders the fretboard based on current UI selections.
+ */
 function generate()
 {
 	var fretcanvas = document.getElementById("fretcanvas" + currentCanvas);
@@ -671,7 +825,6 @@ function generate()
  	var custom_formula_txt = document.getElementById("txt-formula").value.trim();
 	var custom_formula = custom_formula_txt.split(/\s+/);
 	var name;
-
 
 	var ctx = CurrentCtx();
 	ctx.font = "bold 14px Arial";
@@ -702,6 +855,10 @@ function generate()
 	loadOrSaveCurrent(true);
 }
 
+/**
+ * Iterates over a predefined list of input element IDs and executes a callback function for each.
+ * @param {function(HTMLElement):void} fn - The callback function to execute for each input element.
+ */
 function forAllInputs (fn)
 {
 	var ids = ["select-notes", "formulas", "txt-formula", "select-rendertype", "txt-starting-fret", "txt-num-frets", "txt-canvas-width"];
@@ -716,6 +873,9 @@ function forAllInputs (fn)
 	}
 }
 
+/**
+ * Sets up event listeners for configuration input elements to regenerate the fretboard on changes.
+ */
 function configChanges()
 {
 	forAllInputs(function(item)
@@ -733,6 +893,11 @@ function configChanges()
 	});
 }
 
+/**
+ * Loads or saves the current fretboard configuration to/from the `all_fretboards` object.
+ * @param {boolean} save - If true, saves the current UI values to `all_fretboards`.
+ *                         If false, loads values from `all_fretboards` to the UI.
+ */
 function loadOrSaveCurrent (save)
 {
 	var object = null;
@@ -783,6 +948,9 @@ function loadOrSaveCurrent (save)
 	}
 }
 
+/**
+ * Refreshes the fretboard selection dropdown with the current number of fretboards.
+ */
 function refreshFretboardSelects()
 {
 	var fretboard_selects = document.getElementById("fretboards");
@@ -797,6 +965,9 @@ function refreshFretboardSelects()
 	}
 }
 
+/**
+ * Adds a new canvas for a fretboard and generates it.
+ */
 function addCanvas()
 {
 	lastCanvas++;
@@ -821,11 +992,19 @@ function addCanvas()
 	currentCanvas = prevCanvas;
 }
 
+/**
+ * Placeholder function to remove a canvas. Currently shows an alert.
+ */
 function rmCanvas()
 {
 	alert("not implemented");
 }
 
+/**
+ * Handles the change event for the fretboard selection dropdown.
+ * Sets the current canvas and loads its configuration.
+ * @param {HTMLSelectElement} elem - The select element that triggered the event.
+ */
 function changedFretboards(elem)
 {
 	currentCanvas = elem.value;
