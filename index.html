@@ -2,8 +2,8 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=5.0">
-    <title>JSFretboards - Guitar Fretboard Tool</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=5.0">    <title>JSFretboards - Guitar Fretboard Tool</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="stylesheet" href="styles.css">
     <!-- Include modular JavaScript files in dependency order -->
     <script src="js/music-theory.js" defer></script>
@@ -412,19 +412,18 @@
             const body = document.body;
             const layoutBtn = document.querySelector('.layout-toggle-btn');
             const isSideBySide = body.classList.contains('layout-sidebyside');
-            
-            if (isSideBySide) {
+              if (isSideBySide) {
                 // Switch to overlay layout
                 body.classList.remove('layout-sidebyside');
                 body.classList.add('layout-overlay');
-                layoutBtn.textContent = '⚏ Side-by-Side';
+                layoutBtn.textContent = '⚏';
                 layoutBtn.title = 'Switch to Side-by-Side Mode';
                 localStorage.setItem('layout-mode', 'overlay');
             } else {
                 // Switch to side-by-side layout
                 body.classList.remove('layout-overlay');
                 body.classList.add('layout-sidebyside');
-                layoutBtn.textContent = '📱 Overlay';
+                layoutBtn.textContent = '📱';
                 layoutBtn.title = 'Switch to Overlay Mode';
                 localStorage.setItem('layout-mode', 'sidebyside');
             }
@@ -437,17 +436,16 @@
             
             // Default to overlay layout (current style)
             const useOverlay = savedLayout !== 'sidebyside';
-            
-            if (useOverlay) {
+              if (useOverlay) {
                 body.classList.add('layout-overlay');
                 if (layoutBtn) {
-                    layoutBtn.textContent = '⚏ Side-by-Side';
+                    layoutBtn.textContent = '⚏';
                     layoutBtn.title = 'Switch to Side-by-Side Mode';
                 }
             } else {
                 body.classList.add('layout-sidebyside');
                 if (layoutBtn) {
-                    layoutBtn.textContent = '📱 Overlay';
+                    layoutBtn.textContent = '📱';
                     layoutBtn.title = 'Switch to Overlay Mode';
                 }
             }
@@ -459,7 +457,7 @@
         <h1>JSFretboards</h1>
         <div class="header-controls">
             <button type="button" class="toggle-btn" onclick="toggleFormulario()">Toggle Form</button>
-            <button type="button" class="layout-toggle-btn" onclick="toggleLayout()" title="Switch Layout Mode">⚏ Side-by-Side</button>
+            <button type="button" class="layout-toggle-btn" onclick="toggleLayout()" title="Switch Layout Mode">⚏</button>
         </div>
     </div><div class="main-container">        <div id="formulario" class="form-panel">
             <div class="form-panel-header">
