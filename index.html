@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html>
-<head>    <link rel="stylesheet" href="styles.css">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=5.0">
+    <title>JSFretboards - Guitar Fretboard Tool</title>
+    <link rel="stylesheet" href="styles.css">
     <!-- Include modular JavaScript files in dependency order -->
     <script src="js/music-theory.js" defer></script>
     <script src="js/ui-components.js" defer></script>
@@ -8,28 +12,80 @@
     <script src="js/fretboard-renderer.js" defer></script>
     <script src="js/data-manager.js" defer></script>
     <script src="js/event-handlers.js" defer></script>
-    <script src="js/main.js" defer></script>
-    <script>
+    <script src="js/main.js" defer></script>    <script>
         function toggleFormulario() {
             const formulario = document.getElementById('formulario');
+            const toggleBtn = document.querySelector('.toggle-btn');
+            
             if (formulario.style.display === 'none') {
                 formulario.style.display = 'block';
+                toggleBtn.textContent = 'Hide Form';
             } else {
                 formulario.style.display = 'none';
+                toggleBtn.textContent = 'Show Form';
             }
+            
+            // Save the form visibility state
+            localStorage.setItem('form-visible', formulario.style.display !== 'none');
         }
-          function updateGridLayout() {
+          // Initialize form visibility on load for mobile and tablet
+        function initializeFormVisibility() {
+            const formulario = document.getElementById('formulario');
+            const toggleBtn = document.querySelector('.toggle-btn');
+            const isMobile = window.innerWidth <= 768;
+            const isTablet = window.innerWidth > 768 && window.innerWidth <= 1024;
+            
+            // On mobile, start with form hidden to show fretboards first
+            // On tablet and desktop, keep form visible by default
+            const savedState = localStorage.getItem('form-visible');
+            let shouldShowForm = true;
+            
+            if (savedState !== null) {
+                shouldShowForm = savedState === 'true';
+            } else if (isMobile) {
+                shouldShowForm = false;
+            } else {
+                shouldShowForm = true; // Default to visible for tablet and desktop
+            }
+            
+            if (shouldShowForm) {
+                formulario.style.display = 'block';
+                toggleBtn.textContent = 'Hide Form';
+            } else {
+                formulario.style.display = 'none';
+                toggleBtn.textContent = 'Show Form';
+            }
+        }        function updateGridLayout() {
             const cols = document.getElementById('txt-grid-cols').value;
             const container = document.getElementById('canvas-container');
             
             console.log('Updating grid to', cols, 'columns');
-            container.style.gridTemplateColumns = 'repeat(' + cols + ', 1fr)';
+            
+            // Responsive grid adjustments for different screen sizes
+            const isTabletPortrait = window.innerWidth > 768 && window.innerWidth <= 1024 && window.matchMedia("(orientation: portrait)").matches;
+            const isTabletLandscape = window.innerWidth > 768 && window.innerWidth <= 1024 && window.matchMedia("(orientation: landscape)").matches;
+            const isMobile = window.innerWidth <= 768;
+            
+            if (isMobile) {
+                // Force single column on mobile
+                container.style.gridTemplateColumns = '1fr';
+            } else if (isTabletPortrait) {
+                // Force single column on tablet portrait for better viewing
+                container.style.gridTemplateColumns = '1fr';
+            } else if (isTabletLandscape) {
+                // Limit to max 3 columns on tablet landscape
+                const tabletCols = Math.min(parseInt(cols), 3);
+                container.style.gridTemplateColumns = 'repeat(' + tabletCols + ', 1fr)';
+            } else {
+                // Desktop - use selected number of columns
+                container.style.gridTemplateColumns = 'repeat(' + cols + ', 1fr)';
+            }
             
             // Also call the jsfretboard.js function if it exists
             if (typeof window.updateGridLayout !== 'undefined' && window.updateGridLayout !== updateGridLayout) {
                 window.updateGridLayout();
             }
-        }        function updateCustomScaleIndicator() {
+        }function updateCustomScaleIndicator() {
             const customFormulaInput = document.getElementById('txt-formula');
             const scalesSection = document.getElementById('scales-section');
             
@@ -62,6 +118,12 @@
             }
         }        // Set up the custom scale indicator when the page loads
         document.addEventListener('DOMContentLoaded', function() {
+            // Initialize form visibility for mobile and tablet
+            initializeFormVisibility();
+            
+            // Initialize responsive tracking
+            localStorage.setItem('was-mobile', window.innerWidth <= 768);
+            
             const customFormulaInput = document.getElementById('txt-formula');
             if (customFormulaInput) {
                 // Check on input change
@@ -81,6 +143,21 @@
             
             // Set up collapsible sections
             setupCollapsibleSections();
+            
+            // Initialize responsive grid layout
+            if (typeof updateGridLayout === 'function') {
+                updateGridLayout();
+            }
+            
+            // Add keyboard support for closing form with Escape key
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    const formulario = document.getElementById('formulario');
+                    if (formulario && formulario.style.display !== 'none') {
+                        toggleFormulario();
+                    }
+                }
+            });
         });
 
         function setupCollapsibleSections() {
@@ -268,14 +345,72 @@
                 document.getElementById('txt-num-frets').value = endVal - startVal;
             }
         }
+          // Enhanced window resize and orientation change handling for tablets
+        let resizeTimeout;
+        let orientationTimeout;
+        
+        function handleResponsiveLayout() {
+            // Update grid layout based on current screen size and orientation
+            if (typeof updateGridLayout === 'function') {
+                updateGridLayout();
+            }
+            
+            // Force canvas redraw for better responsive experience
+            if (typeof generate === 'function') {
+                generate();
+            }
+            
+            // Update form visibility behavior if screen size category changed
+            const wasMobile = localStorage.getItem('was-mobile') === 'true';
+            const isMobile = window.innerWidth <= 768;
+            
+            if (wasMobile !== isMobile) {
+                localStorage.setItem('was-mobile', isMobile);
+                // Don't auto-hide form when transitioning from mobile to tablet/desktop
+                if (!isMobile && localStorage.getItem('form-visible') === null) {
+                    const formulario = document.getElementById('formulario');
+                    const toggleBtn = document.querySelector('.toggle-btn');
+                    if (formulario && toggleBtn) {
+                        formulario.style.display = 'block';
+                        toggleBtn.textContent = 'Hide Form';
+                        localStorage.setItem('form-visible', 'true');
+                    }
+                }
+            }
+        }
+        
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(handleResponsiveLayout, 150);
+        });
+        
+        // Enhanced orientation change handling for tablets
+        window.addEventListener('orientationchange', function() {
+            clearTimeout(orientationTimeout);
+            orientationTimeout = setTimeout(function() {
+                handleResponsiveLayout();
+                
+                // Additional delay for orientation change to complete
+                setTimeout(handleResponsiveLayout, 300);
+            }, 100);
+        });
+        
+        // Also listen for screen orientation API if available (modern browsers)
+        if (screen && screen.orientation) {
+            screen.orientation.addEventListener('change', function() {
+                clearTimeout(orientationTimeout);
+                orientationTimeout = setTimeout(handleResponsiveLayout, 200);
+            });
+        }
     </script>
 </head>
 <body>    <div class="header">
         <h1>JSFretboards</h1>
                 <button type="button" class="toggle-btn" onclick="toggleFormulario()">Toggle Form</button>
-    </div>
-
-    <div class="main-container">        <div id="formulario" class="form-panel">
+    </div>    <div class="main-container">        <div id="formulario" class="form-panel">
+            <div class="form-panel-header">
+                <button type="button" class="form-close-btn" onclick="toggleFormulario()" title="Close Form">×</button>
+            </div>
             <div class="form-section" id="fretboard-management">
                 <h3>Fretboard Management</h3>
                 <div class="form-section-content">

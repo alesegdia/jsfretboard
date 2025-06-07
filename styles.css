@@ -5,11 +5,17 @@
     padding: 0;
 }
 
+html {
+    scroll-behavior: smooth;
+}
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     background-color: #f8f9fa;
     color: #333;
     line-height: 1.6;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
 }
 
 /* Header Styles */
@@ -49,16 +55,75 @@ body {
 /* Main Layout */
 .main-container {
     padding: 20px;
+    position: relative;
 }
 
 .form-panel {
-    background: white;
+    background: rgba(255, 255, 255, 0.95);
     border-radius: 12px;
     padding: 25px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
     width: 400px;
-    float: left;
-    margin-right: 20px;
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+    transition: all 0.3s ease;
+}
+
+/* Add custom scrollbar styling for the form panel */
+.form-panel::-webkit-scrollbar {
+    width: 8px;
+}
+
+.form-panel::-webkit-scrollbar-track {
+    background: rgba(241, 241, 241, 0.5);
+    border-radius: 4px;
+}
+
+.form-panel::-webkit-scrollbar-thumb {
+    background: #667eea;
+    border-radius: 4px;
+}
+
+.form-panel::-webkit-scrollbar-thumb:hover {
+    background: #5a6fd8;
+}
+
+/* Form panel header with close button */
+.form-panel-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 15px;
+    margin-top: -5px;
+}
+
+.form-close-btn {
+    background: rgba(220, 53, 69, 0.1);
+    border: 1px solid rgba(220, 53, 69, 0.2);
+    color: #dc3545;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 20px;
+    font-weight: bold;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    padding: 0;
+}
+
+.form-close-btn:hover {
+    background: rgba(220, 53, 69, 0.15);
+    border-color: rgba(220, 53, 69, 0.3);
+    transform: scale(1.1);
 }
 
 .canvas-panel {
@@ -67,6 +132,13 @@ body {
     padding: 20px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     overflow: hidden;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+/* Add subtle dimming effect when form is visible */
+body:has(.form-panel:not([style*="display: none"])) .canvas-panel {
+    filter: brightness(0.98);
 }
 
 /* Form Styling */
@@ -499,6 +571,7 @@ a, h1 {
     transition: all 0.3s ease;
     cursor: pointer;
     background: #f8f9fa;
+    position: relative;
     overflow: hidden;
     min-height: 200px;
 }
@@ -509,6 +582,8 @@ a, h1 {
     width: auto;
     height: auto;
     object-fit: contain;
+    display: block;
+    transition: all 0.3s ease;
 }
 
 .canvas-item:hover {
@@ -531,4 +606,525 @@ a, h1 {
 
 #fretboard-select {
     width: 100%;
+}
+
+/* Mobile Responsive Styles */
+@media screen and (max-width: 768px) {
+    /* Header adjustments for mobile */
+    .header {
+        padding: 15px 10px;
+    }
+    
+    .header h1 {
+        font-size: 1.8rem;
+        margin-bottom: 8px;
+    }
+    
+    .toggle-btn {
+        padding: 8px 16px;
+        font-size: 13px;
+        margin-bottom: 8px;
+    }
+      /* Main container mobile layout */
+    .main-container {
+        padding: 10px;
+    }    /* Form panel mobile styles - overlay */
+    .form-panel {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        width: auto;
+        max-height: calc(100vh - 20px);
+        padding: 20px;
+        z-index: 1001;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(15px);
+    }
+    
+    /* Mobile close button adjustments */
+    .form-close-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 22px;
+    }
+    
+    /* Canvas panel mobile styles */
+    .canvas-panel {
+        width: 100%;
+        padding: 15px;
+        border-radius: 8px;
+    }
+    
+    /* Form sections mobile adjustments */
+    .form-section {
+        margin-bottom: 12px;
+        padding-bottom: 10px;
+    }
+    
+    .form-section h3 {
+        font-size: 1.1rem;
+        padding: 6px 8px;
+    }
+    
+    .form-group {
+        margin-bottom: 10px;
+    }
+    
+    /* Form inputs mobile optimization */
+    input[type="text"], select {
+        padding: 12px 10px;
+        font-size: 16px; /* Prevents zoom on iOS */
+        border-radius: 6px;
+    }
+    
+    /* Range sliders mobile adjustments */
+    input[type="range"] {
+        height: 12px;
+        margin: 8px 0;
+    }
+    
+    input[type="range"]::-webkit-slider-thumb {
+        width: 24px;
+        height: 24px;
+    }
+    
+    input[type="range"]::-moz-range-thumb {
+        width: 24px;
+        height: 24px;
+    }
+    
+    /* Button adjustments for mobile */
+    .btn-icon {
+        width: 44px;
+        height: 44px;
+        font-size: 20px;
+        touch-action: manipulation;
+    }
+    
+    .btn-primary, .btn-clear {
+        padding: 12px 16px;
+        font-size: 14px;
+        touch-action: manipulation;
+        min-height: 44px;
+    }
+    
+    /* Button group mobile layout */
+    .button-group {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    .input-button-group {
+        flex-direction: column;
+        gap: 8px;
+        align-items: stretch;
+    }
+    
+    .input-button-group input {
+        margin-bottom: 0;
+    }
+    
+    /* Canvas container mobile grid */
+    #canvas-container {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        padding: 0;
+    }
+    
+    .canvas-item {
+        padding: 10px;
+        min-height: 150px;
+        border-radius: 8px;
+    }
+    
+    .canvas-item canvas {
+        max-width: 100%;
+        height: auto;
+    }
+    
+    /* Dual range slider mobile adjustments */
+    .dual-range-container {
+        height: 50px;
+        margin: 15px 0;
+    }
+    
+    .dual-range-container input[type="range"] {
+        height: 12px;
+    }
+    
+    .dual-range-container input[type="range"]::-webkit-slider-thumb {
+        width: 24px;
+        height: 24px;
+    }
+    
+    .dual-range-container input[type="range"]::-moz-range-thumb {
+        width: 24px;
+        height: 24px;
+    }
+    
+    /* Form row mobile stacking */
+    .form-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    /* Value display mobile optimization */
+    #fret-start-value, #fret-end-value {
+        font-size: 14px;
+    }
+    
+    /* Tooltip adjustments for mobile */
+    .tooltip {
+        font-size: 11px;
+        padding: 6px 8px;
+        bottom: 110%;
+    }
+    
+    /* Mobile-specific hover states (touch devices) */
+    .form-section h3:active {
+        background: rgba(102, 126, 234, 0.1);
+    }
+    
+    .canvas-item:active {
+        transform: translateY(0);
+        background: rgba(102, 126, 234, 0.05);
+    }
+}
+
+/* Tablet adjustments */
+@media screen and (min-width: 769px) and (max-width: 1024px) {    .main-container {
+        padding: 15px;
+    }      .form-panel {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        width: 350px;
+        max-height: calc(100vh - 40px);
+        overflow-y: auto;
+        z-index: 1000;
+        scrollbar-width: thin;
+        scrollbar-color: #667eea #f1f1f1;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(12px);
+    }
+    
+    /* Custom scrollbar for webkit browsers on tablet */
+    .form-panel::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    .form-panel::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+    
+    .form-panel::-webkit-scrollbar-thumb {
+        background: #667eea;
+        border-radius: 4px;
+    }
+    
+    .form-panel::-webkit-scrollbar-thumb:hover {
+        background: #5a6fd8;
+    }
+      .canvas-panel {
+        width: 100%;
+    }
+    
+    .header h1 {
+        font-size: 2.2rem;
+    }
+    
+    #canvas-container {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+    
+    .canvas-item {
+        min-height: 200px;
+        padding: 20px;
+    }
+    
+    .canvas-item canvas {
+        max-width: 100%;
+        height: auto;
+    }
+    
+    /* Enhanced touch targets for tablet */
+    .form-section h3 {
+        padding: 12px 15px;
+        font-size: 1.25rem;
+    }
+    
+    .btn-icon {
+        width: 44px;
+        height: 44px;
+        font-size: 20px;
+    }
+    
+    .btn-primary, .btn-clear {
+        padding: 12px 20px;
+        font-size: 16px;
+    }
+    
+    /* Better spacing for tablet forms */
+    .form-group {
+        margin-bottom: 15px;
+    }
+    
+    .form-section {
+        margin-bottom: 18px;
+        padding-bottom: 15px;
+    }
+    
+    input[type="text"], select {
+        padding: 12px 15px;
+        font-size: 16px;
+    }
+      /* Enhanced slider controls for tablet */
+    input[type="range"]::-webkit-slider-thumb {
+        width: 24px;
+        height: 24px;
+    }
+    
+    input[type="range"]::-moz-range-thumb {
+        width: 24px;
+        height: 24px;
+    }
+    
+    /* Tablet-specific canvas optimizations */
+    .canvas-item canvas {
+        max-height: 200px;
+        width: auto;
+        object-fit: contain;
+    }
+}
+
+/* Tablet landscape orientation - optimize for horizontal space */
+@media screen and (min-width: 769px) and (max-width: 1024px) and (orientation: landscape) {
+    .main-container {
+        padding: 12px;
+        gap: 12px;
+    }
+    
+    .form-panel {
+        width: 300px;
+        padding: 20px;
+        max-height: calc(100vh - 120px);
+    }
+    
+    .header {
+        padding: 15px;
+    }
+    
+    .header h1 {
+        font-size: 2rem;
+        margin-bottom: 8px;
+    }
+    
+    .form-section h3 {
+        font-size: 1.1rem;
+        padding: 10px 12px;
+    }
+    
+    .canvas-item {
+        min-height: 160px;
+        padding: 15px;
+    }
+    
+    /* Optimize grid for landscape tablet */
+    #canvas-container {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+    }
+}
+
+/* Tablet portrait orientation - optimize for vertical space */
+@media screen and (min-width: 769px) and (max-width: 1024px) and (orientation: portrait) {
+    .main-container {
+        padding: 15px;
+    }
+      .form-panel {
+        position: fixed;
+        top: 15px;
+        left: 15px;
+        right: 15px;
+        width: auto;
+        max-width: 500px;
+        margin: 0 auto;
+        max-height: calc(100vh - 30px);
+        overflow-y: auto;
+        z-index: 1000;
+        background: rgba(255, 255, 255, 0.96);
+        backdrop-filter: blur(12px);
+    }
+    
+    .canvas-panel {
+        width: 100%;
+    }
+    
+    #canvas-container {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .canvas-item {
+        min-height: 220px;
+        max-width: 100%;
+    }
+    
+    .canvas-item canvas {
+        width: 100%;
+        max-width: 100%;
+    }
+}
+
+/* Large mobile landscape orientation */
+@media screen and (max-width: 768px) and (orientation: landscape) {
+    .header {
+        padding: 10px;
+    }
+    
+    .header h1 {
+        font-size: 1.6rem;
+        margin-bottom: 5px;
+    }
+    
+    .main-container {
+        padding: 8px;
+    }
+    
+    .form-panel {
+        padding: 15px;
+    }
+    
+    .canvas-panel {
+        padding: 12px;
+    }
+    
+    .canvas-item {
+        min-height: 120px;
+    }
+}
+
+/* Very small screens (phones in portrait) */
+@media screen and (max-width: 480px) {
+    .header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .form-panel {
+        padding: 15px;
+    }
+    
+    .form-section h3 {
+        font-size: 1rem;
+    }
+    
+    input[type="text"], select {
+        padding: 10px 8px;
+    }
+    
+    .btn-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+    
+    .canvas-item {
+        padding: 8px;
+        min-height: 120px;
+    }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+    /* Increase touch targets for touch devices */
+    .form-section h3 {
+        padding: 12px 15px;
+        margin: 3px 0;
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+    }
+    
+    input[type="range"]::-webkit-slider-thumb {
+        width: 32px;
+        height: 32px;
+    }
+    
+    input[type="range"]::-moz-range-thumb {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .btn-icon {
+        min-width: 48px;
+        min-height: 48px;
+        font-size: 20px;
+    }
+    
+    .btn-primary, .btn-clear {
+        min-height: 48px;
+        padding: 14px 18px;
+        font-size: 16px;
+    }
+    
+    /* Enhanced touch targets for dropdowns and inputs */
+    input[type="text"], select {
+        min-height: 48px;
+        padding: 12px 15px;
+        font-size: 16px;
+    }
+    
+    /* Better spacing for touch interfaces */
+    .form-group {
+        margin-bottom: 18px;
+    }
+    
+    .button-group {
+        gap: 12px;
+    }
+}
+
+/* High DPI displays and performance optimizations */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    /* Ensure crisp rendering on high DPI displays */
+    .canvas-item canvas {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+    }
+    
+    /* Optimize for retina displays on tablets */
+    @media screen and (min-width: 769px) and (max-width: 1024px) {
+        .canvas-item canvas {
+            image-rendering: auto;
+            image-rendering: -webkit-optimize-contrast;
+        }
+        
+        /* Better text rendering on high DPI tablets */
+        body {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+    }
+}
+
+/* Performance improvements for tablets */
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+    /* Hardware acceleration for smooth animations */
+    .canvas-item, .form-section h3, .btn-icon, .btn-primary, .btn-clear {
+        transform: translateZ(0);
+        backface-visibility: hidden;
+    }
+    
+    /* Optimize transitions for tablet touch */
+    .canvas-item:hover {
+        transition-duration: 0.2s;
+    }
+    
+    .form-section h3:hover {
+        transition-duration: 0.2s;
+    }
 }
