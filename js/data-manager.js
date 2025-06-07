@@ -89,23 +89,25 @@ function loadOrSaveCurrent(save) {
 		object = {};
 	} else {
 		object = all_fretboards[currentCanvas];
-	}
-	if(object == undefined) return;
-	var ids = ["select-notes", "formulas", "txt-formula", "select-rendertype", "txt-starting-fret", "txt-num-frets", "txt-canvas-width", "txt-grid-cols"];
+	}	if(object == undefined) return;
+	var ids = ["select-notes", "formulas", "txt-formula", "select-rendertype", "txt-starting-fret", "txt-ending-fret", "txt-num-frets", "txt-canvas-width", "txt-grid-cols", "slider-marker-size", "slider-note-size", "slider-string-spacing", "slider-fret-font-size", "slider-note-font-size", "slider-title-font-size"];
 	for(var i = 0; i < ids.length; i++) {
 		var current_id = ids[i];
-		var item = document.getElementById(current_id);
-		if(item.tagName == "SELECT") {
+		var item = document.getElementById(current_id);		if(item.tagName == "SELECT") {
 			if(save) {
 				object[current_id] = item.selectedIndex;				
 			} else {
 				item.selectedIndex = object[current_id];
 			}
-		} else if(item.tagName = "INPUT" && item.type == "text") {
+		} else if(item.tagName == "INPUT" && (item.type == "text" || item.type == "range")) {
 			if(save) {
 				object[current_id] = item.value;
 			} else {
 				item.value = object[current_id];
+				// Update the display value for range inputs
+				if (item.type == "range") {
+					updateRangeDisplay(item);
+				}
 			}
 		} else {
 			console.assert(false);

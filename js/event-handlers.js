@@ -8,7 +8,7 @@
  * @param {function(HTMLElement):void} fn - The callback function to execute for each input element.
  */
 function forAllInputs(fn) {
-	var ids = ["select-notes", "formulas", "txt-formula", "select-rendertype", "txt-starting-fret", "txt-num-frets", "txt-canvas-width", "txt-grid-cols"];
+	var ids = ["select-notes", "formulas", "txt-formula", "select-rendertype", "txt-starting-fret", "txt-ending-fret", "txt-num-frets", "txt-canvas-width", "txt-grid-cols", "slider-marker-size", "slider-note-size", "slider-string-spacing", "slider-fret-font-size", "slider-note-font-size", "slider-title-font-size"];
 	for(var i = 0; i < ids.length; i++) {
 		var current_id = ids[i];
 		var item = document.getElementById(current_id);
@@ -31,6 +31,11 @@ function configChanges() {
 				updateCustomScaleIndicator();
 			}
 			
+			// Update range display if this is a range input
+			if (item.type === 'range' && typeof updateRangeDisplay === 'function') {
+				updateRangeDisplay(item);
+			}
+			
 			// Auto-save on every change
 			autoSave();
 		});
@@ -45,6 +50,16 @@ function configChanges() {
 			// Auto-save on every change
 			autoSave();
 		});
+		// Add input event for range sliders for real-time updates
+		if (item.type === 'range') {
+			item.addEventListener("input", function() {
+				if (typeof updateRangeDisplay === 'function') {
+					updateRangeDisplay(item);
+				}
+				generate();
+				autoSave();
+			});
+		}
 	});
 	
 	// Add specific event listener for grid layout changes
