@@ -116,10 +116,15 @@
                     autoSave();
                 }
             }
-        }        // Set up the custom scale indicator when the page loads
+        }
+        
+        // Set up the custom scale indicator when the page loads
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize form visibility for mobile and tablet
             initializeFormVisibility();
+            
+            // Initialize layout mode
+            initializeLayout();
             
             // Initialize responsive tracking
             localStorage.setItem('was-mobile', window.innerWidth <= 768);
@@ -402,12 +407,61 @@
                 orientationTimeout = setTimeout(handleResponsiveLayout, 200);
             });
         }
+        
+        function toggleLayout() {
+            const body = document.body;
+            const layoutBtn = document.querySelector('.layout-toggle-btn');
+            const isSideBySide = body.classList.contains('layout-sidebyside');
+            
+            if (isSideBySide) {
+                // Switch to overlay layout
+                body.classList.remove('layout-sidebyside');
+                body.classList.add('layout-overlay');
+                layoutBtn.textContent = '⚏ Side-by-Side';
+                layoutBtn.title = 'Switch to Side-by-Side Mode';
+                localStorage.setItem('layout-mode', 'overlay');
+            } else {
+                // Switch to side-by-side layout
+                body.classList.remove('layout-overlay');
+                body.classList.add('layout-sidebyside');
+                layoutBtn.textContent = '📱 Overlay';
+                layoutBtn.title = 'Switch to Overlay Mode';
+                localStorage.setItem('layout-mode', 'sidebyside');
+            }
+        }
+        
+        function initializeLayout() {
+            const body = document.body;
+            const layoutBtn = document.querySelector('.layout-toggle-btn');
+            const savedLayout = localStorage.getItem('layout-mode');
+            
+            // Default to overlay layout (current style)
+            const useOverlay = savedLayout !== 'sidebyside';
+            
+            if (useOverlay) {
+                body.classList.add('layout-overlay');
+                if (layoutBtn) {
+                    layoutBtn.textContent = '⚏ Side-by-Side';
+                    layoutBtn.title = 'Switch to Side-by-Side Mode';
+                }
+            } else {
+                body.classList.add('layout-sidebyside');
+                if (layoutBtn) {
+                    layoutBtn.textContent = '📱 Overlay';
+                    layoutBtn.title = 'Switch to Overlay Mode';
+                }
+            }
+        }
+
     </script>
 </head>
 <body>    <div class="header">
         <h1>JSFretboards</h1>
-                <button type="button" class="toggle-btn" onclick="toggleFormulario()">Toggle Form</button>
-    </div>    <div class="main-container">        <div id="formulario" class="form-panel">
+        <div class="header-controls">
+            <button type="button" class="toggle-btn" onclick="toggleFormulario()">Toggle Form</button>
+            <button type="button" class="layout-toggle-btn" onclick="toggleLayout()" title="Switch Layout Mode">⚏ Side-by-Side</button>
+        </div>
+    </div><div class="main-container">        <div id="formulario" class="form-panel">
             <div class="form-panel-header">
                 <button type="button" class="form-close-btn" onclick="toggleFormulario()" title="Close Form">×</button>
             </div>
