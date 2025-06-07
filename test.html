@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>JSFretboard Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+        .pass { background-color: #d4edda; }
+        .fail { background-color: #f8d7da; }
+    </style>
+</head>
+<body>
+    <h1>JSFretboard Module Test</h1>
+    <div id="test-results"></div>
+    
+    <!-- Include all modules in the same order as the main application -->
+    <script src="js/music-theory.js"></script>
+    <script src="js/ui-components.js"></script>
+    <script src="js/canvas-manager.js"></script>
+    <script src="js/fretboard-renderer.js"></script>
+    <script src="js/data-manager.js"></script>
+    <script src="js/event-handlers.js"></script>
+    
+    <script>
+        // Simple test functions
+        function runTests() {
+            const results = document.getElementById('test-results');
+            let allPassed = true;
+            
+            // Test 1: Music theory functions
+            try {
+                const noteValue = calculate_note_value('C');
+                const noteFromValue = calculate_note_from_value(0, true);
+                const isCorrect = (noteValue === 0 && noteFromValue === 'C');
+                addTestResult('Music Theory: Note calculations', isCorrect);
+                if (!isCorrect) allPassed = false;
+            } catch (e) {
+                addTestResult('Music Theory: Note calculations', false, e.message);
+                allPassed = false;
+            }
+            
+            // Test 2: Scale generation
+            try {
+                const scale = get_scale_from_formula('C', ['1', '2', '3', '4', '5', '6', '7']);
+                const isCorrect = scale && scale.length === 7 && scale[0].note === 'C';
+                addTestResult('Music Theory: Scale generation', isCorrect);
+                if (!isCorrect) allPassed = false;
+            } catch (e) {
+                addTestResult('Music Theory: Scale generation', false, e.message);
+                allPassed = false;
+            }
+            
+            // Test 3: UI Components
+            try {
+                const notesHTML = createNotesSelectHTML(0);
+                const formulasHTML = generateFormulasHTML(0);
+                const isCorrect = notesHTML.includes('select') && formulasHTML.includes('select');
+                addTestResult('UI Components: HTML generation', isCorrect);
+                if (!isCorrect) allPassed = false;
+            } catch (e) {
+                addTestResult('UI Components: HTML generation', false, e.message);
+                allPassed = false;
+            }
+            
+            // Test 4: Default formulas
+            try {
+                const isCorrect = default_formulas && default_formulas.length > 0;
+                addTestResult('UI Components: Default formulas available', isCorrect);
+                if (!isCorrect) allPassed = false;
+            } catch (e) {
+                addTestResult('UI Components: Default formulas available', false, e.message);
+                allPassed = false;
+            }
+            
+            // Test 5: Utility functions
+            try {
+                const slug = slugify('Test String!');
+                const isCorrect = slug === 'test-string';
+                addTestResult('UI Components: Slugify function', isCorrect);
+                if (!isCorrect) allPassed = false;
+            } catch (e) {
+                addTestResult('UI Components: Slugify function', false, e.message);
+                allPassed = false;
+            }
+            
+            // Summary
+            const summary = document.createElement('div');
+            summary.className = allPassed ? 'test pass' : 'test fail';
+            summary.innerHTML = `<strong>Overall Result: ${allPassed ? 'ALL TESTS PASSED' : 'SOME TESTS FAILED'}</strong>`;
+            results.appendChild(summary);
+        }
+        
+        function addTestResult(testName, passed, error = '') {
+            const results = document.getElementById('test-results');
+            const div = document.createElement('div');
+            div.className = passed ? 'test pass' : 'test fail';
+            div.innerHTML = `<strong>${testName}:</strong> ${passed ? 'PASS' : 'FAIL'}${error ? ` (${error})` : ''}`;
+            results.appendChild(div);
+        }
+        
+        // Run tests when page loads
+        document.addEventListener('DOMContentLoaded', runTests);
+    </script>
+</body>
+</html>

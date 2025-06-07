@@ -50,11 +50,58 @@ function loadData()
 	refreshFretboardSelects();
 	addClickHandlersToCanvases();
 	updateCanvasSelection();
-	
-	// Update custom scale indicator after loading all data
+		// Update custom scale indicator after loading all data
 	if (typeof updateCustomScaleIndicator === 'function') {
 		updateCustomScaleIndicator();
 	}
+	
+	// Auto-save after loading data
+	autoSave();
+}
+
+/**
+ * Auto-saves the current fretboard data to the save field (without downloading).
+ */
+function autoSave()
+{
+	// First, make sure current canvas state is saved
+	loadOrSaveCurrent(true);
+	
+	var saveDataField = document.getElementById("data-save");
+	if (saveDataField) {
+		var jsonData = JSON.stringify(all_fretboards);
+		saveDataField.value = jsonData;
+	}
+}
+
+/**
+ * Saves the current fretboard data to a downloadable file or updates the save field.
+ */
+function saveData()
+{
+	// First, make sure current canvas state is saved
+	loadOrSaveCurrent(true);
+	
+	var saveDataField = document.getElementById("data-save");
+	var jsonData = JSON.stringify(all_fretboards, null, 2);
+	
+	// Update the save field
+	saveDataField.value = jsonData;
+	
+	// Create a downloadable file
+	var blob = new Blob([jsonData], {type: 'application/json'});
+	var url = URL.createObjectURL(blob);
+	
+	// Create a temporary download link
+	var a = document.createElement('a');
+	a.href = url;
+	a.download = 'fretboard-data.json';
+	document.body.appendChild(a);
+	a.click();
+	document.body.removeChild(a);
+	URL.revokeObjectURL(url);
+	
+	alert('Data saved! The JSON has been copied to the save field and downloaded as a file.');
 }
 
 /**
@@ -810,11 +857,12 @@ function generate()
 	ctx.fillStyle = "black";
 	ctx.textAlign = "left";
 	ctx.textBaseline = "middle";
-	ctx.fillText(name, 30, 30);
-	ctx.font = prev_style;
+	ctx.fillText(name, 30, 30);	ctx.font = prev_style;
 	fretboard.render_scale(scale, selected_render, start_fret, num_frets);
 
 	loadOrSaveCurrent(true);
+	// Auto-save after generating
+	autoSave();
 }
 
 /**
@@ -850,8 +898,8 @@ function configChanges()
 				updateCustomScaleIndicator();
 			}
 			
-			saveItem = document.getElementById("data-save");
-			saveItem.value = JSON.stringify(all_fretboards);
+			// Auto-save on every change
+			autoSave();
 		});
 		item.addEventListener("keyup", function() {
 			generate();
@@ -861,8 +909,8 @@ function configChanges()
 				updateCustomScaleIndicator();
 			}
 			
-			saveItem = document.getElementById("data-save");
-			saveItem.value = JSON.stringify(all_fretboards);
+			// Auto-save on every change
+			autoSave();
 		});
 	});
 	
@@ -887,9 +935,8 @@ function updateGridLayout() {
 	
 	container.style.gridTemplateColumns = 'repeat(' + cols + ', 1fr)';
 	
-	// Save the configuration
-	var saveItem = document.getElementById("data-save");
-	saveItem.value = JSON.stringify(all_fretboards);
+	// Auto-save on grid layout change
+	autoSave();
 }
 
 /**
@@ -1019,14 +1066,16 @@ function selectCanvasByClick(canvasId)
 		
 		// Update visual selection
 		updateCanvasSelection();
-		
-		// Update custom scale indicator after loading fretboard data
+				// Update custom scale indicator after loading fretboard data
 		if (typeof updateCustomScaleIndicator === 'function') {
 			updateCustomScaleIndicator();
 		}
 		
 		// Regenerate display with new settings
 		generate();
+		
+		// Auto-save after selecting canvas
+		autoSave();
 	}
 }
 
@@ -1089,13 +1138,14 @@ function addCanvas()
 	});
 	
 	document.getElementById("canvas-container").appendChild(newCanvas);
-	
-	var prevCanvas = currentCanvas;
+		var prevCanvas = currentCanvas;
 	currentCanvas = lastCanvas;
 	refreshFretboardSelects();
 	generate();
 	updateCanvasSelection();
 	currentCanvas = prevCanvas;
+	// Auto-save after adding canvas
+	autoSave();
 }
 
 /**
@@ -1127,14 +1177,12 @@ function rmCanvas()
 			loadOrSaveCurrent(false);
 		}
 	}
-	
-	// Refresh the radio buttons and ensure correct selection
+		// Refresh the radio buttons and ensure correct selection
 	refreshFretboardSelects();
 	updateCanvasSelection();
 	
-	// Update save data
-	var saveItem = document.getElementById("data-save");
-	saveItem.value = JSON.stringify(all_fretboards);
+	// Auto-save after removing canvas
+	autoSave();
 }
 
 /**
@@ -1154,6 +1202,8 @@ function changedFretboards(elem)
 	}
 	
 	generate();
+	// Auto-save after changing fretboards
+	autoSave();
 }
 
 refreshFretboardSelects();
@@ -1161,4 +1211,15 @@ refreshFretboardSelects();
 configChanges();
 // Initial canvas selection update
 updateCanvasSelection();
-//generate();
+
+// Initialize the first fretboard on page load
+document.addEventListener('DOMContentLoaded', function() {
+	// Add the first canvas if none exist
+	if (lastCanvas < 0) {
+		addCanvas();
+	}
+		// Generate initial fretboard and save state
+	generate();
+	// Auto-save initial state
+	autoSave();
+});
